@@ -3,290 +3,436 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ayurveda Connect Prototype</title>
+    <title>Ayurveda Connect</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            color: #1f2937;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #1f2937; }
+        .fade { transition: opacity 0.3s; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
     <!-- Main Content Container -->
     <div class="flex-grow flex flex-col justify-center items-center p-4" id="main-container">
-
-        <!-- Landing Page (hidden by default) -->
-        <div id="landing-page" class="hidden flex-col items-center justify-center text-center p-8 bg-white rounded-lg shadow-lg max-w-lg w-full transition-opacity duration-500 ease-in-out opacity-0">
-            <h1 class="text-4xl sm:text-5xl font-bold text-teal-600 mb-4">Ayurveda Connect</h1>
+        <!-- Auth Page -->
+        <div id="auth-page" class="flex flex-col items-center justify-center text-center p-8 bg-white rounded-lg shadow-lg max-w-lg w-full fade">
+            <h1 class="text-4xl font-bold text-teal-600 mb-4">Ayurveda Connect</h1>
             <p class="text-lg text-gray-700 mb-6">
-                A mission-driven platform to empower the global Ayurveda community. Connect with mentors, share knowledge, and build your professional portfolio.
+                Sign in to join the Ayurveda community and access real-time posts, mentors, jobs, and more.
             </p>
-            <button id="get-started-btn" class="px-6 py-3 bg-teal-600 text-white font-semibold rounded-full shadow-lg hover:bg-teal-700 transition-colors duration-300">
-                Get Started
-            </button>
+            <form id="auth-form" class="space-y-3 w-full">
+                <input type="email" id="auth-email" class="w-full p-3 border rounded-md" placeholder="Email" autocomplete="username">
+                <input type="password" id="auth-password" class="w-full p-3 border rounded-md" placeholder="Password" autocomplete="current-password">
+                <input type="text" id="auth-name" class="w-full p-3 border rounded-md" placeholder="Your Name (for sign up)" autocomplete="name" style="display:none;">
+                <div class="flex space-x-2">
+                    <button type="submit" id="sign-in-btn" class="px-6 py-2 bg-teal-600 text-white rounded-full font-semibold hover:bg-teal-700 transition-colors duration-300">Sign In</button>
+                    <button type="button" id="sign-up-btn" class="px-6 py-2 bg-indigo-600 text-white rounded-full font-semibold hover:bg-indigo-700 transition-colors duration-300">Sign Up</button>
+                </div>
+                <div>
+                    <button type="button" id="anon-btn" class="text-sm text-gray-500 underline">Continue as Guest</button>
+                </div>
+            </form>
+            <div id="auth-message" class="mt-2 text-red-500 text-sm"></div>
         </div>
-
-        <!-- Dashboard View (visible by default) -->
-        <div id="dashboard-view" class="flex flex-col w-full max-w-4xl p-6 md:p-8 bg-white rounded-lg shadow-lg transition-opacity duration-500 ease-in-out opacity-100">
+        <!-- Dashboard View -->
+        <div id="dashboard-view" class="hidden flex flex-col w-full max-w-4xl p-6 md:p-8 bg-white rounded-lg shadow-lg fade">
             <header class="flex flex-col md:flex-row justify-between items-center mb-6 border-b pb-4">
                 <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 bg-teal-200 rounded-full flex items-center justify-center font-bold text-xl text-teal-800">
-                        AF
-                    </div>
+                    <div id="profile-avatar" class="w-12 h-12 bg-teal-200 rounded-full flex items-center justify-center font-bold text-xl text-teal-800">?</div>
                     <div class="text-left">
-                        <h2 class="text-xl font-bold">Welcome, Fils!</h2>
-                        <p class="text-sm text-gray-500">BAMS Student, Uganda</p>
+                        <h2 class="text-xl font-bold" id="profile-name">Welcome!</h2>
+                        <p class="text-sm text-gray-500" id="profile-role"></p>
                     </div>
                 </div>
                 <nav class="mt-4 md:mt-0 space-x-2 sm:space-x-4">
-                    <button id="profile-btn" class="px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-teal-600 rounded-full hover:bg-teal-100 transition-colors duration-200">
-                        <span class="hidden sm:inline">My </span>Profile
-                    </button>
-                    <button id="mentors-btn" class="px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-teal-600 rounded-full hover:bg-teal-100 transition-colors duration-200">
-                        Mentors
-                    </button>
-                    <button id="jobs-btn" class="px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-teal-600 rounded-full hover:bg-teal-100 transition-colors duration-200">
-                        Jobs
-                    </button>
+                    <button class="nav-btn px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-teal-600 rounded-full hover:bg-teal-100 transition-colors duration-200" data-page="dashboard">Dashboard</button>
+                    <button class="nav-btn px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-teal-600 rounded-full hover:bg-teal-100 transition-colors duration-200" data-page="profile">My Profile</button>
+                    <button class="nav-btn px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-teal-600 rounded-full hover:bg-teal-100 transition-colors duration-200" data-page="mentors">Mentors</button>
+                    <button class="nav-btn px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-teal-600 rounded-full hover:bg-teal-100 transition-colors duration-200" data-page="jobs">Jobs</button>
+                    <button id="sign-out-btn" class="px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-red-500 rounded-full hover:bg-red-100 transition-colors duration-200">Sign Out</button>
                 </nav>
             </header>
-            
             <!-- Main Content Area -->
             <div id="main-content-area" class="flex flex-col w-full">
-                <section id="dashboard-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Mentorship Card -->
-                    <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">Connect with a Mentor</h3>
-                        <p class="text-gray-600 text-sm mb-4">
-                            Find experienced practitioners who can guide your journey, or get instant advice from our AI mentor.
-                        </p>
-                        <button id="find-mentor-btn" class="w-full py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors duration-200">
-                            Find a Mentor
-                        </button>
-                    </div>
-                    
-                    <!-- Knowledge Hub Card -->
-                    <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">Explore the Knowledge Hub</h3>
-                        <p class="text-gray-600 text-sm mb-4">
-                            Access scattered journals, research, and case studies in one place.
-                        </p>
-                        <button id="search-research-btn" class="w-full py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200">
-                            Search Research
-                        </button>
-                    </div>
-
-                    <!-- Career Services Card -->
-                    <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">Career & Jobs</h3>
-                        <p class="text-gray-600 text-sm mb-4">
-                            Discover job openings and internship opportunities globally.
-                        </p>
-                        <button id="view-jobs-btn" class="w-full py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600 transition-colors duration-200">
-                            View Jobs
-                        </button>
-                    </div>
-                </section>
-
-                <!-- AI Mentor Section (hidden by default) -->
-                <section id="ai-mentor-section" class="hidden mt-8 p-6 bg-white rounded-lg shadow-lg">
-                    <h3 class="text-xl font-bold mb-4 flex items-center">
-                        <span class="mr-2">✨ Mentorship AI ✨</span>
-                    </h3>
-                    <p class="text-gray-600 mb-4">
-                        Ask a question about your Ayurveda studies, concepts, or career path. Our AI mentor will provide instant guidance.
-                    </p>
-                    <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 mb-4">
-                        <textarea id="mentor-prompt" class="flex-grow p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="e.g., How can I better understand the concept of Dhatu?"></textarea>
-                        <button id="mentor-ask-btn" class="px-6 py-3 bg-teal-600 text-white font-semibold rounded-md shadow-lg hover:bg-teal-700 transition-colors duration-300">
-                            Ask ✨
-                        </button>
-                    </div>
-                    <div id="mentor-response" class="bg-gray-100 p-4 rounded-md mt-4 hidden">
-                        <div id="mentor-response-text" class="prose max-w-none text-gray-800"></div>
-                        <div id="mentor-loading" class="text-gray-500 animate-pulse hidden">Generating response...</div>
-                    </div>
-                </section>
-
-                <!-- Knowledge Hub AI Section (hidden by default) -->
-                <section id="knowledge-hub-section" class="hidden mt-8 p-6 bg-white rounded-lg shadow-lg">
-                    <h3 class="text-xl font-bold mb-4 flex items-center">
-                        <span class="mr-2">✨ Knowledge Hub AI ✨</span>
-                    </h3>
-                    <p class="text-gray-600 mb-4">
-                        Enter a research topic or a journal article title, and our AI will provide a concise summary.
-                    </p>
-                    <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 mb-4">
-                        <input type="text" id="knowledge-prompt" class="flex-grow p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., A review of Ayurvedic treatment for diabetes">
-                        <button id="knowledge-summarize-btn" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-md shadow-lg hover:bg-blue-700 transition-colors duration-300">
-                            Summarize ✨
-                        </button>
-                    </div>
-                    <div id="knowledge-response" class="bg-gray-100 p-4 rounded-md mt-4 hidden">
-                        <div id="knowledge-response-text" class="prose max-w-none text-gray-800"></div>
-                        <div id="knowledge-loading" class="text-gray-500 animate-pulse hidden">Generating summary...</div>
-                    </div>
-                </section>
-                
-                <!-- Community Feed Section -->
-                <section id="community-feed-section" class="mt-8">
-                    <h3 class="text-xl font-bold mb-4">Community Feed</h3>
-                    <div class="space-y-4">
-                        <!-- Feed Item 1 -->
-                        <div class="bg-white p-4 rounded-lg shadow-md border border-gray-200">
-                            <div class="flex items-center mb-2">
-                                <div class="w-8 h-8 bg-gray-300 rounded-full mr-2"></div>
-                                <span class="font-semibold text-gray-800">Dr. Priya Sharma</span>
-                            </div>
-                            <p class="text-gray-700 text-sm">
-                                Sharing a case study on a successful *Panchakarma* treatment for chronic arthritis. Let's discuss the role of *Aama* in this condition. #Ayurveda #Panchakarma
+                <!-- Dashboard Page -->
+                <section id="dashboard-page" class="page-section">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        <!-- Mentorship Card -->
+                        <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Connect with a Mentor</h3>
+                            <p class="text-gray-600 text-sm mb-4">
+                                Find experienced practitioners who can guide your journey, or get instant advice from our AI mentor.
                             </p>
+                            <button class="w-full py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors duration-200" onclick="showSection('mentors')">Find a Mentor</button>
                         </div>
-                        <!-- Feed Item 2 -->
-                        <div class="bg-white p-4 rounded-lg shadow-md border border-gray-200">
-                            <div class="flex items-center mb-2">
-                                <div class="w-8 h-8 bg-gray-300 rounded-full mr-2"></div>
-                                <span class="font-semibold text-gray-800">Rajesh K.</span>
-                            </div>
-                            <p class="text-gray-700 text-sm">
-                                As a second-year BAMS student, I'm struggling with the complexity of *Charaka Samhita*. Any advice from my seniors on how to approach it?
+                        <!-- Knowledge Hub Card -->
+                        <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Explore the Knowledge Hub</h3>
+                            <p class="text-gray-600 text-sm mb-4">
+                                Access journals, research, and case studies in one place.
                             </p>
+                            <button class="w-full py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200" onclick="showSection('knowledge')">Search Research</button>
                         </div>
+                        <!-- Career Services Card -->
+                        <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Career & Jobs</h3>
+                            <p class="text-gray-600 text-sm mb-4">
+                                Discover job openings and internship opportunities globally.
+                            </p>
+                            <button class="w-full py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600 transition-colors duration-200" onclick="showSection('jobs')">View Jobs</button>
+                        </div>
+                    </div>
+                    <!-- Real-Time Community Feed -->
+                    <section class="mt-8">
+                        <h3 class="text-xl font-bold mb-4">Community Feed</h3>
+                        <form id="post-form" class="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mb-4">
+                            <textarea id="post-content" class="flex-grow p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="What's on your mind?"></textarea>
+                            <button type="submit" class="px-6 py-3 bg-teal-600 text-white font-semibold rounded-md shadow-lg hover:bg-teal-700 transition-colors duration-300">Post</button>
+                        </form>
+                        <div id="post-error" class="text-red-500 text-sm mb-2 hidden"></div>
+                        <div id="feed-list" class="space-y-4"></div>
+                    </section>
+                </section>
+                <!-- Profile Page -->
+                <section id="profile-page" class="page-section hidden">
+                    <h3 class="text-xl font-bold mb-4">My Profile</h3>
+                    <div class="bg-gray-50 p-6 rounded-lg shadow-inner w-full max-w-md">
+                        <div class="mb-4">
+                            <span class="font-semibold">Name:</span>
+                            <span id="profile-details-name"></span>
+                        </div>
+                        <div class="mb-4">
+                            <span class="font-semibold">Email:</span>
+                            <span id="profile-details-email"></span>
+                        </div>
+                        <div class="mb-4">
+                            <span class="font-semibold">User ID:</span>
+                            <span id="profile-details-id"></span>
+                        </div>
+                    </div>
+                </section>
+                <!-- Mentors Page -->
+                <section id="mentors-page" class="page-section hidden">
+                    <h3 class="text-xl font-bold mb-4">Mentors</h3>
+                    <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
+                        Coming soon: Connect with Ayurveda mentors and practitioners.
+                    </div>
+                </section>
+                <!-- Jobs Page -->
+                <section id="jobs-page" class="page-section hidden">
+                    <h3 class="text-xl font-bold mb-4">Jobs & Internships</h3>
+                    <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
+                        Coming soon: Ayurveda job openings and internships worldwide.
+                    </div>
+                </section>
+                <!-- Knowledge Hub Page -->
+                <section id="knowledge-page" class="page-section hidden">
+                    <h3 class="text-xl font-bold mb-4">Knowledge Hub</h3>
+                    <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
+                        Coming soon: AI-powered summaries of Ayurveda research.
                     </div>
                 </section>
             </div>
         </div>
+        <!-- Custom Message Box -->
+        <div id="custom-message" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-red-100 text-red-700 px-4 py-2 rounded-lg shadow hidden"></div>
     </div>
-
     <script>
-        const getStartedBtn = document.getElementById('get-started-btn');
-        const landingPage = document.getElementById('landing-page');
-        const dashboardView = document.getElementById('dashboard-view');
-        const mainContentArea = document.getElementById('main-content-area');
-        const dashboardCards = document.getElementById('dashboard-cards');
-        const findMentorBtn = document.getElementById('find-mentor-btn');
-        const searchResearchBtn = document.getElementById('search-research-btn');
-        const aiMentorSection = document.getElementById('ai-mentor-section');
-        const knowledgeHubSection = document.getElementById('knowledge-hub-section');
-        const mentorAskBtn = document.getElementById('mentor-ask-btn');
-        const mentorPrompt = document.getElementById('mentor-prompt');
-        const mentorResponse = document.getElementById('mentor-response');
-        const mentorResponseText = document.getElementById('mentor-response-text');
-        const mentorLoading = document.getElementById('mentor-loading');
-        const knowledgeSummarizeBtn = document.getElementById('knowledge-summarize-btn');
-        const knowledgePrompt = document.getElementById('knowledge-prompt');
-        const knowledgeResponse = document.getElementById('knowledge-response');
-        const knowledgeResponseText = document.getElementById('knowledge-response-text');
-        const knowledgeLoading = document.getElementById('knowledge-loading');
+    // ---- Firebase Setup ----
+    // The following global variables are expected: __app_id, __firebase_config, __initial_auth_token
+    // For local testing, you can define them in your browser console before loading the page.
+    let firebaseApp, auth, db;
+    // UI Elements
+    const authPage = document.getElementById('auth-page');
+    const dashboardView = document.getElementById('dashboard-view');
+    const signInBtn = document.getElementById('sign-in-btn');
+    const signUpBtn = document.getElementById('sign-up-btn');
+    const anonBtn = document.getElementById('anon-btn');
+    const signOutBtn = document.getElementById('sign-out-btn');
+    const authForm = document.getElementById('auth-form');
+    const authEmail = document.getElementById('auth-email');
+    const authPassword = document.getElementById('auth-password');
+    const authName = document.getElementById('auth-name');
+    const authMessage = document.getElementById('auth-message');
+    const customMessage = document.getElementById('custom-message');
+    const navBtns = document.querySelectorAll('.nav-btn');
+    const mainContentArea = document.getElementById('main-content-area');
+    const pageSections = document.querySelectorAll('.page-section');
+    // Profile
+    const profileAvatar = document.getElementById('profile-avatar');
+    const profileName = document.getElementById('profile-name');
+    const profileRole = document.getElementById('profile-role');
+    // Profile Details
+    const profileDetailsName = document.getElementById('profile-details-name');
+    const profileDetailsEmail = document.getElementById('profile-details-email');
+    const profileDetailsId = document.getElementById('profile-details-id');
+    // Feed
+    const postForm = document.getElementById('post-form');
+    const postContent = document.getElementById('post-content');
+    const feedList = document.getElementById('feed-list');
+    const postError = document.getElementById('post-error');
 
-        // Function to toggle between different views
-        function toggleView(showSection) {
-            const sections = [dashboardCards, aiMentorSection, knowledgeHubSection];
-            sections.forEach(section => {
-                if (section === showSection) {
-                    section.classList.remove('hidden');
-                } else {
-                    section.classList.add('hidden');
-                }
-            });
+    // ---- State ----
+    let currentUser = null;
+    let userProfile = null;
+    let feedUnsub = null;
+    let pageState = 'dashboard'; // dashboard | profile | mentors | jobs | knowledge
+
+    // ---- Utility: Show custom message ----
+    function showMessage(text, timeout=3000) {
+        customMessage.innerText = text;
+        customMessage.classList.remove('hidden');
+        setTimeout(() => customMessage.classList.add('hidden'), timeout);
+    }
+
+    // ---- Utility: Switch main section ----
+    function showSection(section) {
+        pageSections.forEach(sec => {
+            if (sec.id === section + '-page') {
+                sec.classList.remove('hidden');
+            } else {
+                sec.classList.add('hidden');
+            }
+        });
+        pageState = section;
+    }
+
+    // ---- Nav Buttons ----
+    navBtns.forEach(btn => btn.addEventListener('click', () => {
+        showSection(btn.dataset.page);
+    }));
+
+    // ---- Auth Form Mode Switch ----
+    signUpBtn.addEventListener('click', () => {
+        authName.style.display = 'block';
+        signInBtn.style.display = 'none';
+        signUpBtn.style.display = 'none';
+        setTimeout(() => {
+            signUpBtn.style.display = 'inline-block';
+            signUpBtn.innerText = 'Submit Sign Up';
+            signUpBtn.onclick = submitSignUp;
+        }, 10);
+    });
+
+    function resetAuthForm() {
+        authName.style.display = 'none';
+        signUpBtn.innerText = 'Sign Up';
+        signUpBtn.onclick = null;
+        signInBtn.style.display = 'inline-block';
+        signUpBtn.style.display = 'inline-block';
+        authForm.reset();
+    }
+
+    // ---- Auth Actions ----
+    // Sign In
+    authForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (signUpBtn.innerText === 'Submit Sign Up') {
+            submitSignUp();
+            return;
         }
+        const email = authEmail.value.trim();
+        const password = authPassword.value;
+        if (!email || !password) {
+            authMessage.innerText = 'Please provide email and password.';
+            return;
+        }
+        authMessage.innerText = '';
+        try {
+            await auth.signInWithEmailAndPassword(email, password);
+        } catch (err) {
+            authMessage.innerText = err.message;
+        }
+    });
 
-        getStartedBtn.addEventListener('click', () => {
-            landingPage.classList.add('opacity-0');
-            setTimeout(() => {
-                landingPage.classList.add('hidden');
-                dashboardView.classList.remove('hidden');
-                setTimeout(() => {
-                    dashboardView.classList.remove('opacity-0');
-                }, 20);
-            }, 500);
-        });
+    // Sign Up
+    async function submitSignUp() {
+        const email = authEmail.value.trim();
+        const password = authPassword.value;
+        const name = authName.value.trim();
+        if (!email || !password || !name) {
+            authMessage.innerText = 'Fill all fields for sign up.';
+            return;
+        }
+        authMessage.innerText = '';
+        try {
+            const cred = await auth.createUserWithEmailAndPassword(email, password);
+            await db.collection('users').doc(cred.user.uid).set({
+                userId: cred.user.uid,
+                name: name,
+                email: email,
+                createdAt: new Date(),
+            });
+            resetAuthForm();
+        } catch (err) {
+            authMessage.innerText = err.message;
+        }
+    }
 
-        findMentorBtn.addEventListener('click', () => {
-            toggleView(aiMentorSection);
-        });
+    // Anonymous sign in
+    anonBtn.addEventListener('click', async () => {
+        authMessage.innerText = '';
+        try {
+            await auth.signInAnonymously();
+        } catch (err) {
+            authMessage.innerText = err.message;
+        }
+    });
 
-        searchResearchBtn.addEventListener('click', () => {
-            toggleView(knowledgeHubSection);
-        });
-        
-        // --- Gemini API Call Functions ---
+    // Sign Out
+    signOutBtn.addEventListener('click', async () => {
+        await auth.signOut();
+    });
 
-        const apiKey = "";
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+    // ---- Firebase Initialization ----
+    function initializeFirebase() {
+        if (window.__firebase_config) {
+            firebaseApp = firebase.initializeApp(window.__firebase_config, window.__app_id || undefined);
+            auth = firebase.auth();
+            db = firebase.firestore();
+        } else {
+            showMessage("Firebase config not found.");
+        }
+    }
 
-        // Mentorship AI functionality
-        mentorAskBtn.addEventListener('click', async () => {
-            const prompt = mentorPrompt.value.trim();
-            if (prompt === "") return;
+    // ---- Auth State & UI Management ----
+    function setAuthUI(isAuth) {
+        if (isAuth) {
+            authPage.classList.add('hidden');
+            dashboardView.classList.remove('hidden');
+        } else {
+            dashboardView.classList.add('hidden');
+            authPage.classList.remove('hidden');
+            resetAuthForm();
+        }
+    }
 
-            mentorResponse.classList.remove('hidden');
-            mentorResponseText.classList.add('hidden');
-            mentorLoading.classList.remove('hidden');
-
-            const payload = {
-                contents: [{ parts: [{ text: prompt }] }],
+    // ---- Get Profile ----
+    async function getProfile(uid) {
+        if (!uid) return null;
+        const userDoc = await db.collection('users').doc(uid).get();
+        if (userDoc.exists) return userDoc.data();
+        // For anonymous, create basic profile
+        if (auth.currentUser && auth.currentUser.isAnonymous) {
+            const anonProfile = {
+                userId: uid,
+                name: "Anonymous",
+                email: "",
+                createdAt: new Date(),
             };
+            await db.collection('users').doc(uid).set(anonProfile);
+            return anonProfile;
+        }
+        return null;
+    }
 
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+    // ---- Render Profile ----
+    function renderProfile(profile, firebaseUser) {
+        profileAvatar.innerText = (profile.name || "?")[0].toUpperCase();
+        profileName.innerText = `Welcome, ${profile.name || "User"}!`;
+        profileRole.innerText = firebaseUser.isAnonymous ? "Guest User" : (profile.email || "");
+        profileDetailsName.innerText = profile.name || "";
+        profileDetailsEmail.innerText = profile.email || "(anonymous)";
+        profileDetailsId.innerText = profile.userId || firebaseUser.uid || "";
+    }
+
+    // ---- Real-Time Feed ----
+    function subscribeFeed() {
+        if (feedUnsub) feedUnsub();
+        feedUnsub = db.collection('posts').orderBy('timestamp', 'desc').limit(50)
+            .onSnapshot(snapshot => {
+                feedList.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const post = doc.data();
+                    const el = document.createElement('div');
+                    el.className = "bg-white p-4 rounded-lg shadow-md border border-gray-200";
+                    el.innerHTML = `
+                        <div class="flex items-center mb-2">
+                            <div class="w-8 h-8 bg-gray-300 rounded-full mr-2 flex items-center justify-center font-bold text-gray-800 text-sm">
+                                ${post.userName ? post.userName[0].toUpperCase() : "?"}
+                            </div>
+                            <span class="font-semibold text-gray-800">${post.userName || "Anonymous"}</span>
+                            <span class="ml-2 text-xs text-gray-400">${post.timestamp ? formatTime(post.timestamp) : ""}</span>
+                        </div>
+                        <p class="text-gray-700 text-sm">${escapeHTML(post.content)}</p>
+                    `;
+                    feedList.appendChild(el);
                 });
+            }, err => {
+                showMessage("Error loading feed: " + err.message);
+            });
+    }
 
-                const result = await response.json();
-                const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response.";
-                
-                mentorResponseText.innerHTML = text.replace(/\n/g, '<br>'); // Preserve newlines
-                mentorResponseText.classList.remove('hidden');
-            } catch (error) {
-                mentorResponseText.innerHTML = "An error occurred. Please try again.";
-                mentorResponseText.classList.remove('hidden');
-                console.error('API Error:', error);
-            } finally {
-                mentorLoading.classList.add('hidden');
+    // ---- Post Form ----
+    postForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        postError.classList.add('hidden');
+        const content = postContent.value.trim();
+        if (!content) {
+            postError.innerText = "Post cannot be empty.";
+            postError.classList.remove('hidden');
+            return;
+        }
+        if (!currentUser) {
+            postError.innerText = "You must be signed in to post.";
+            postError.classList.remove('hidden');
+            return;
+        }
+        try {
+            await db.collection('posts').add({
+                userId: currentUser.uid,
+                userName: userProfile?.name || "Anonymous",
+                content,
+                timestamp: new Date(),
+            });
+            postContent.value = '';
+        } catch (err) {
+            postError.innerText = err.message;
+            postError.classList.remove('hidden');
+        }
+    });
+
+    // ---- Helpers ----
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, tag => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+        }[tag]));
+    }
+    function formatTime(ts) {
+        if (!ts) return '';
+        let date = ts instanceof Date ? ts : ts.toDate ? ts.toDate() : new Date(ts);
+        return date.toLocaleString();
+    }
+
+    // ---- Initialization ----
+    window.addEventListener('DOMContentLoaded', () => {
+        initializeFirebase();
+        if (!auth) return;
+        // Token-based sign-in if available
+        if (window.__initial_auth_token) {
+            auth.signInWithCustomToken(window.__initial_auth_token)
+                .catch(err => showMessage("Token sign-in failed: " + err.message));
+        }
+        // Auth state observer
+        auth.onAuthStateChanged(async (user) => {
+            currentUser = user;
+            setAuthUI(!!user);
+            if (user) {
+                userProfile = await getProfile(user.uid);
+                renderProfile(userProfile || {}, user);
+                subscribeFeed();
+            } else {
+                feedList.innerHTML = '';
+                userProfile = null;
             }
         });
-
-        // Knowledge Hub AI functionality
-        knowledgeSummarizeBtn.addEventListener('click', async () => {
-            const prompt = knowledgePrompt.value.trim();
-            if (prompt === "") return;
-            
-            knowledgeResponse.classList.remove('hidden');
-            knowledgeResponseText.classList.add('hidden');
-            knowledgeLoading.classList.remove('hidden');
-
-            const payload = {
-                contents: [{ parts: [{ text: `Summarize the following topic for an Ayurveda student: ${prompt}` }] }],
-                tools: [{ "google_search": {} }],
-            };
-            
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                
-                const result = await response.json();
-                const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a summary.";
-
-                knowledgeResponseText.innerHTML = text.replace(/\n/g, '<br>');
-                knowledgeResponseText.classList.remove('hidden');
-            } catch (error) {
-                knowledgeResponseText.innerHTML = "An error occurred. Please try again.";
-                knowledgeResponseText.classList.remove('hidden');
-                console.error('API Error:', error);
-            } finally {
-                knowledgeLoading.classList.add('hidden');
-            }
-        });
-
+        // Default to dashboard view
+        showSection('dashboard');
+    });
     </script>
 </body>
 </html>
