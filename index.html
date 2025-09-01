@@ -500,6 +500,128 @@
     // ---- Firebase Setup ----
     // The following global variables are expected: __app_id, __firebase_config, __initial_auth_token
     // For local testing, you can define them in your browser console before loading the page.
+    
+    // Check if Firebase is available, if not create a mock for development
+    let useFirebaseMock = false;
+    
+    // Default test Firebase configuration for development
+    // Replace with your actual Firebase config in production
+    if (!window.__firebase_config) {
+        window.__firebase_config = {
+            apiKey: "demo-api-key",
+            authDomain: "demo-project.firebaseapp.com",
+            projectId: "demo-project",
+            storageBucket: "demo-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef123456"
+        };
+        window.__app_id = "ayurveda-connect-demo";
+        console.warn("Using demo Firebase configuration. Replace with your actual config in production.");
+    }
+    
+    // Firebase Mock for Development (when Firebase CDN is not available)
+    if (typeof firebase === 'undefined') {
+        console.warn("Firebase CDN not available. Using mock implementation for development.");
+        useFirebaseMock = true;
+        
+        // Create a simple mock Firebase object for development
+        window.firebase = {
+            initializeApp: (config, appId) => {
+                console.log("Mock Firebase app initialized with config:", config);
+                return { name: appId || 'default' };
+            },
+            auth: () => ({
+                currentUser: null,
+                signInWithEmailAndPassword: async (email, password) => {
+                    console.log("Mock sign-in:", email);
+                    const mockUser = {
+                        uid: 'mock-user-' + Date.now(),
+                        email: email,
+                        isAnonymous: false
+                    };
+                    setTimeout(() => {
+                        if (window.mockAuthStateChanged) {
+                            window.mockAuthStateChanged(mockUser);
+                        }
+                    }, 100);
+                    return { user: mockUser };
+                },
+                createUserWithEmailAndPassword: async (email, password) => {
+                    console.log("Mock sign-up:", email);
+                    const mockUser = {
+                        uid: 'mock-user-' + Date.now(),
+                        email: email,
+                        isAnonymous: false
+                    };
+                    setTimeout(() => {
+                        if (window.mockAuthStateChanged) {
+                            window.mockAuthStateChanged(mockUser);
+                        }
+                    }, 100);
+                    return { user: mockUser };
+                },
+                signInAnonymously: async () => {
+                    console.log("Mock anonymous sign-in");
+                    const mockUser = {
+                        uid: 'mock-guest-' + Date.now(),
+                        email: null,
+                        isAnonymous: true
+                    };
+                    setTimeout(() => {
+                        if (window.mockAuthStateChanged) {
+                            window.mockAuthStateChanged(mockUser);
+                        }
+                    }, 100);
+                    return { user: mockUser };
+                },
+                signOut: async () => {
+                    console.log("Mock sign-out");
+                    setTimeout(() => {
+                        if (window.mockAuthStateChanged) {
+                            window.mockAuthStateChanged(null);
+                        }
+                    }, 100);
+                },
+                onAuthStateChanged: (callback) => {
+                    window.mockAuthStateChanged = callback;
+                    console.log("Mock auth state listener registered");
+                    return () => console.log("Mock auth state listener unsubscribed");
+                },
+                signInWithCustomToken: async (token) => {
+                    console.log("Mock custom token sign-in:", token);
+                    return { user: { uid: 'mock-token-user', email: 'token@example.com', isAnonymous: false } };
+                }
+            }),
+            firestore: () => ({
+                collection: (name) => ({
+                    doc: (id) => ({
+                        get: async () => ({
+                            exists: false,
+                            data: () => null
+                        }),
+                        set: async (data, options) => {
+                            console.log("Mock Firestore set:", name, id, data);
+                            return Promise.resolve();
+                        }
+                    }),
+                    add: async (data) => {
+                        console.log("Mock Firestore add:", name, data);
+                        return Promise.resolve({ id: 'mock-doc-' + Date.now() });
+                    },
+                    orderBy: () => ({
+                        limit: () => ({
+                            onSnapshot: (callback, errorCallback) => {
+                                console.log("Mock Firestore subscription:", name);
+                                // Return empty snapshot
+                                callback([]);
+                                return () => console.log("Mock subscription unsubscribed");
+                            }
+                        })
+                    })
+                })
+            })
+        };
+    }
     let firebaseApp, auth, db;
     // UI Elements
     const authPage = document.getElementById('auth-page');
@@ -712,6 +834,13 @@
     authForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
+        // Check if Firebase is properly initialized
+        if (!isFirebaseReady()) {
+            authMessage.innerText = 'Authentication service is not available. Please refresh the page and try again.';
+            console.error('Firebase not ready for authentication');
+            return;
+        }
+        
         if (isSignUpMode) {
             // Handle sign-up
             if (!validateSignUpForm()) return;
@@ -721,6 +850,10 @@
             const username = authName.value.trim();
             
             clearAllErrors();
+            
+            // Disable form during submission
+            signUpBtn.disabled = true;
+            signUpBtn.innerText = 'Creating Account...';
             
             try {
                 // Create user account with email and password
@@ -738,6 +871,7 @@
                 showMessage("Account created successfully! Welcome to Ayurveda Connect.");
                 resetAuthForm();
             } catch (err) {
+                console.error('Sign-up error:', err);
                 // Handle specific Firebase auth errors
                 if (err.code === 'auth/email-already-in-use') {
                     showFieldError('email', 'This email is already registered. Try signing in instead.');
@@ -746,8 +880,12 @@
                 } else if (err.code === 'auth/invalid-email') {
                     showFieldError('email', 'Invalid email address format.');
                 } else {
-                    authMessage.innerText = err.message;
+                    authMessage.innerText = 'Failed to create account: ' + err.message;
                 }
+            } finally {
+                // Re-enable form
+                signUpBtn.disabled = false;
+                signUpBtn.innerText = 'Create Account';
             }
         } else {
             // Handle sign-in
@@ -758,10 +896,15 @@
             
             clearAllErrors();
             
+            // Disable form during submission
+            signInBtn.disabled = true;
+            signInBtn.innerText = 'Signing In...';
+            
             try {
                 await auth.signInWithEmailAndPassword(email, password);
                 showMessage("Welcome back!");
             } catch (err) {
+                console.error('Sign-in error:', err);
                 // Handle specific Firebase auth errors
                 if (err.code === 'auth/user-not-found') {
                     showFieldError('email', 'No account found with this email. Try signing up instead.');
@@ -769,9 +912,15 @@
                     showFieldError('password', 'Incorrect password. Please try again.');
                 } else if (err.code === 'auth/invalid-email') {
                     showFieldError('email', 'Invalid email address format.');
+                } else if (err.code === 'auth/too-many-requests') {
+                    authMessage.innerText = 'Too many failed attempts. Please try again later.';
                 } else {
-                    authMessage.innerText = err.message;
+                    authMessage.innerText = 'Failed to sign in: ' + err.message;
                 }
+            } finally {
+                // Re-enable form
+                signInBtn.disabled = false;
+                signInBtn.innerText = 'Sign In';
             }
         }
     });
@@ -784,6 +933,13 @@
     // Anonymous/Guest sign in - improved with immediate feedback
     anonBtn.addEventListener('click', async () => {
         clearAllErrors();
+        
+        // Check if Firebase is properly initialized
+        if (!isFirebaseReady()) {
+            authMessage.innerText = 'Firebase is not properly initialized. Please refresh the page and try again.';
+            console.error('Firebase not ready for anonymous sign-in');
+            return;
+        }
         
         // Show loading state
         anonBtn.disabled = true;
@@ -808,8 +964,12 @@
             showMessage("Welcome! You're now browsing as a guest. You can view content and participate in discussions.");
             
         } catch (err) {
-            authMessage.innerText = 'Failed to sign in as guest: ' + err.message;
             console.error('Anonymous sign-in error:', err);
+            if (err.code === 'auth/operation-not-allowed') {
+                authMessage.innerText = 'Guest sign-in is not enabled. Please contact support or try creating an account.';
+            } else {
+                authMessage.innerText = 'Failed to sign in as guest: ' + err.message;
+            }
         } finally {
             // Reset button state
             anonBtn.disabled = false;
@@ -824,13 +984,33 @@
 
     // ---- Firebase Initialization ----
     function initializeFirebase() {
-        if (window.__firebase_config) {
-            firebaseApp = firebase.initializeApp(window.__firebase_config, window.__app_id || undefined);
-            auth = firebase.auth();
-            db = firebase.firestore();
-        } else {
-            showMessage("Firebase config not found.");
+        try {
+            if (window.__firebase_config && firebase) {
+                firebaseApp = firebase.initializeApp(window.__firebase_config, window.__app_id || undefined);
+                auth = firebase.auth();
+                db = firebase.firestore();
+                
+                if (useFirebaseMock) {
+                    console.log("Firebase mock initialized successfully");
+                } else {
+                    console.log("Firebase initialized successfully");
+                }
+                return true;
+            } else {
+                console.error("Firebase config or Firebase library not found");
+                showMessage("Firebase configuration is missing. Please check your setup.");
+                return false;
+            }
+        } catch (error) {
+            console.error("Firebase initialization failed:", error);
+            showMessage("Failed to initialize Firebase: " + error.message);
+            return false;
         }
+    }
+    
+    // Helper function to check if Firebase is ready
+    function isFirebaseReady() {
+        return auth && db && firebaseApp;
     }
 
     // ---- Auth State & UI Management ----
@@ -847,7 +1027,7 @@
 
     // ---- Get Profile ----
     async function getProfile(uid) {
-        if (!uid) return null;
+        if (!uid || !isFirebaseReady()) return null;
         
         try {
             const userDoc = await db.collection('users').doc(uid).get();
@@ -908,27 +1088,35 @@
 
     // ---- Real-Time Feed ----
     function subscribeFeed() {
+        if (!isFirebaseReady()) {
+            console.warn('Cannot subscribe to feed: Firebase not ready');
+            return;
+        }
+        
         if (feedUnsub) feedUnsub();
         feedUnsub = db.collection('posts').orderBy('timestamp', 'desc').limit(50)
             .onSnapshot(snapshot => {
-                feedList.innerHTML = '';
-                snapshot.forEach(doc => {
-                    const post = doc.data();
-                    const el = document.createElement('div');
-                    el.className = "bg-white p-4 rounded-lg shadow-md border border-gray-200";
-                    el.innerHTML = `
-                        <div class="flex items-center mb-2">
-                            <div class="w-8 h-8 bg-gray-300 rounded-full mr-2 flex items-center justify-center font-bold text-gray-800 text-sm">
-                                ${post.userName ? post.userName[0].toUpperCase() : "?"}
+                if (feedList) {
+                    feedList.innerHTML = '';
+                    snapshot.forEach(doc => {
+                        const post = doc.data();
+                        const el = document.createElement('div');
+                        el.className = "bg-white p-4 rounded-lg shadow-md border border-gray-200";
+                        el.innerHTML = `
+                            <div class="flex items-center mb-2">
+                                <div class="w-8 h-8 bg-gray-300 rounded-full mr-2 flex items-center justify-center font-bold text-gray-800 text-sm">
+                                    ${post.userName ? post.userName[0].toUpperCase() : "?"}
+                                </div>
+                                <span class="font-semibold text-gray-800">${post.userName || "Anonymous"}</span>
+                                <span class="ml-2 text-xs text-gray-400">${post.timestamp ? formatTime(post.timestamp) : ""}</span>
                             </div>
-                            <span class="font-semibold text-gray-800">${post.userName || "Anonymous"}</span>
-                            <span class="ml-2 text-xs text-gray-400">${post.timestamp ? formatTime(post.timestamp) : ""}</span>
-                        </div>
-                        <p class="text-gray-700 text-sm">${escapeHTML(post.content)}</p>
-                    `;
-                    feedList.appendChild(el);
-                });
+                            <p class="text-gray-700 text-sm">${escapeHTML(post.content)}</p>
+                        `;
+                        feedList.appendChild(el);
+                    });
+                }
             }, err => {
+                console.error('Feed subscription error:', err);
                 showMessage("Error loading feed: " + err.message);
             });
     }
@@ -1224,34 +1412,50 @@
 
     // ---- Initialization ----
     window.addEventListener('DOMContentLoaded', () => {
-        initializeFirebase();
-        if (!auth) return;
+        // Initialize Firebase first
+        const firebaseInitialized = initializeFirebase();
+        
+        if (!firebaseInitialized) {
+            // Show error message and disable auth buttons
+            authMessage.innerText = 'Authentication service is unavailable. Please refresh the page or contact support.';
+            signInBtn.disabled = true;
+            signUpBtn.disabled = true;
+            anonBtn.disabled = true;
+            return;
+        }
         
         // Initialize auth form in sign-in mode
         setAuthMode(false);
         
         // Token-based sign-in if available
-        if (window.__initial_auth_token) {
+        if (window.__initial_auth_token && auth) {
             auth.signInWithCustomToken(window.__initial_auth_token)
-                .catch(err => showMessage("Token sign-in failed: " + err.message));
+                .catch(err => {
+                    console.error('Token sign-in failed:', err);
+                    showMessage("Automatic sign-in failed. Please sign in manually.");
+                });
         }
         
         // Auth state observer - handles automatic UI updates when user signs in/out
-        auth.onAuthStateChanged(async (user) => {
-            currentUser = user;
-            setAuthUI(!!user);
-            
-            if (user) {
-                // User is signed in - get/create their profile and load dashboard
-                userProfile = await getProfile(user.uid);
-                renderProfile(userProfile || {}, user);
-                subscribeFeed();
-            } else {
-                // User is signed out - clear feed and profile data
-                feedList.innerHTML = '';
-                userProfile = null;
-            }
-        });
+        if (auth) {
+            auth.onAuthStateChanged(async (user) => {
+                currentUser = user;
+                setAuthUI(!!user);
+                
+                if (user) {
+                    console.log('User signed in:', user.uid, user.isAnonymous ? '(guest)' : '(registered)');
+                    // User is signed in - get/create their profile and load dashboard
+                    userProfile = await getProfile(user.uid);
+                    renderProfile(userProfile || {}, user);
+                    subscribeFeed();
+                } else {
+                    console.log('User signed out');
+                    // User is signed out - clear feed and profile data
+                    if (feedList) feedList.innerHTML = '';
+                    userProfile = null;
+                }
+            });
+        }
         
         // Default to dashboard view
         showSection('dashboard');
