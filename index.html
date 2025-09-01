@@ -25,14 +25,36 @@
                 Sign in to join the Ayurveda community and access real-time posts, mentors, jobs, and more.
             </p>
             <form id="auth-form" class="space-y-3 w-full">
+                <!-- Username field - only shown during sign up -->
+                <input type="text" id="auth-name" class="w-full p-3 border rounded-md" placeholder="Your Username" autocomplete="name" style="display:none;">
+                <div id="username-error" class="text-red-500 text-xs mt-1" style="display:none;"></div>
+                
+                <!-- Email field -->
                 <input type="email" id="auth-email" class="w-full p-3 border rounded-md" placeholder="Email" autocomplete="username">
+                <div id="email-error" class="text-red-500 text-xs mt-1" style="display:none;"></div>
+                
+                <!-- Password field -->
                 <input type="password" id="auth-password" class="w-full p-3 border rounded-md" placeholder="Password" autocomplete="current-password">
-                <input type="text" id="auth-name" class="w-full p-3 border rounded-md" placeholder="Your Name (for sign up)" autocomplete="name" style="display:none;">
+                <div id="password-error" class="text-red-500 text-xs mt-1" style="display:none;"></div>
+                
+                <!-- Auth mode switcher -->
+                <div id="auth-mode-text" class="text-sm text-center text-gray-600 mb-2">
+                    Sign in to your account
+                </div>
+                
+                <!-- Sign in/up buttons -->
                 <div class="flex space-x-2">
                     <button type="submit" id="sign-in-btn" class="px-6 py-2 bg-teal-600 text-white rounded-full font-semibold hover:bg-teal-700 transition-colors duration-300">Sign In</button>
                     <button type="button" id="sign-up-btn" class="px-6 py-2 bg-indigo-600 text-white rounded-full font-semibold hover:bg-indigo-700 transition-colors duration-300">Sign Up</button>
                 </div>
-                <div>
+                
+                <!-- Mode toggle link -->
+                <div class="text-center">
+                    <button type="button" id="auth-toggle" class="text-sm text-indigo-600 underline">Don't have an account? Sign up</button>
+                </div>
+                
+                <!-- Guest login option -->
+                <div class="text-center">
                     <button type="button" id="anon-btn" class="text-sm text-gray-500 underline">Continue as Guest</button>
                 </div>
             </form>
@@ -159,6 +181,12 @@
     const authName = document.getElementById('auth-name');
     const authMessage = document.getElementById('auth-message');
     const customMessage = document.getElementById('custom-message');
+    const authToggle = document.getElementById('auth-toggle');
+    const authModeText = document.getElementById('auth-mode-text');
+    // Error message elements
+    const usernameError = document.getElementById('username-error');
+    const emailError = document.getElementById('email-error');
+    const passwordError = document.getElementById('password-error');
     const navBtns = document.querySelectorAll('.nav-btn');
     const mainContentArea = document.getElementById('main-content-area');
     const pageSections = document.querySelectorAll('.page-section');
@@ -181,6 +209,7 @@
     let userProfile = null;
     let feedUnsub = null;
     let pageState = 'dashboard'; // dashboard | profile | mentors | jobs | knowledge
+    let isSignUpMode = false; // Track whether we're in sign-up or sign-in mode
 
     // ---- Utility: Show custom message ----
     function showMessage(text, timeout=3000) {
@@ -206,80 +235,236 @@
         showSection(btn.dataset.page);
     }));
 
-    // ---- Auth Form Mode Switch ----
-    signUpBtn.addEventListener('click', () => {
-        authName.style.display = 'block';
-        signInBtn.style.display = 'none';
-        signUpBtn.style.display = 'none';
-        setTimeout(() => {
+    // ---- Auth Form Mode Management ----
+    function setAuthMode(signUpMode) {
+        isSignUpMode = signUpMode;
+        
+        if (signUpMode) {
+            // Switch to sign-up mode
+            authName.style.display = 'block';
+            authModeText.innerText = 'Create your account';
+            authToggle.innerText = 'Already have an account? Sign in';
+            signInBtn.style.display = 'none';
             signUpBtn.style.display = 'inline-block';
-            signUpBtn.innerText = 'Submit Sign Up';
-            signUpBtn.onclick = submitSignUp;
-        }, 10);
+            signUpBtn.innerText = 'Create Account';
+            // Clear any existing error messages
+            clearAllErrors();
+        } else {
+            // Switch to sign-in mode
+            authName.style.display = 'none';
+            authModeText.innerText = 'Sign in to your account';
+            authToggle.innerText = "Don't have an account? Sign up";
+            signInBtn.style.display = 'inline-block';
+            signUpBtn.style.display = 'none';
+            // Clear any existing error messages
+            clearAllErrors();
+        }
+    }
+
+    // ---- Error Message Management ----
+    function clearAllErrors() {
+        authMessage.innerText = '';
+        usernameError.style.display = 'none';
+        emailError.style.display = 'none';
+        passwordError.style.display = 'none';
+        usernameError.innerText = '';
+        emailError.innerText = '';
+        passwordError.innerText = '';
+    }
+
+    function showFieldError(field, message) {
+        if (field === 'username') {
+            usernameError.innerText = message;
+            usernameError.style.display = 'block';
+        } else if (field === 'email') {
+            emailError.innerText = message;
+            emailError.style.display = 'block';
+        } else if (field === 'password') {
+            passwordError.innerText = message;
+            passwordError.style.display = 'block';
+        }
+    }
+
+    function validateSignUpForm() {
+        const email = authEmail.value.trim();
+        const password = authPassword.value;
+        const username = authName.value.trim();
+        let hasErrors = false;
+
+        clearAllErrors();
+
+        // Validate username (for sign-up only)
+        if (!username) {
+            showFieldError('username', 'Username is required');
+            hasErrors = true;
+        } else if (username.length < 2) {
+            showFieldError('username', 'Username must be at least 2 characters');
+            hasErrors = true;
+        }
+
+        // Validate email
+        if (!email) {
+            showFieldError('email', 'Email is required');
+            hasErrors = true;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            showFieldError('email', 'Please enter a valid email address');
+            hasErrors = true;
+        }
+
+        // Validate password
+        if (!password) {
+            showFieldError('password', 'Password is required');
+            hasErrors = true;
+        } else if (password.length < 6) {
+            showFieldError('password', 'Password must be at least 6 characters');
+            hasErrors = true;
+        }
+
+        return !hasErrors;
+    }
+
+    function validateSignInForm() {
+        const email = authEmail.value.trim();
+        const password = authPassword.value;
+        let hasErrors = false;
+
+        clearAllErrors();
+
+        // Validate email
+        if (!email) {
+            showFieldError('email', 'Email is required');
+            hasErrors = true;
+        }
+
+        // Validate password
+        if (!password) {
+            showFieldError('password', 'Password is required');
+            hasErrors = true;
+        }
+
+        return !hasErrors;
+    }
+
+    // ---- Auth Mode Toggle ----
+    authToggle.addEventListener('click', () => {
+        setAuthMode(!isSignUpMode);
+        authForm.reset();
     });
 
+    // ---- Reset Auth Form ----
     function resetAuthForm() {
-        authName.style.display = 'none';
-        signUpBtn.innerText = 'Sign Up';
-        signUpBtn.onclick = null;
-        signInBtn.style.display = 'inline-block';
-        signUpBtn.style.display = 'inline-block';
+        setAuthMode(false); // Default to sign-in mode
         authForm.reset();
+        clearAllErrors();
     }
 
     // ---- Auth Actions ----
-    // Sign In
+    // Form submission handler
     authForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (signUpBtn.innerText === 'Submit Sign Up') {
-            submitSignUp();
-            return;
-        }
-        const email = authEmail.value.trim();
-        const password = authPassword.value;
-        if (!email || !password) {
-            authMessage.innerText = 'Please provide email and password.';
-            return;
-        }
-        authMessage.innerText = '';
-        try {
-            await auth.signInWithEmailAndPassword(email, password);
-        } catch (err) {
-            authMessage.innerText = err.message;
+        
+        if (isSignUpMode) {
+            // Handle sign-up
+            if (!validateSignUpForm()) return;
+            
+            const email = authEmail.value.trim();
+            const password = authPassword.value;
+            const username = authName.value.trim();
+            
+            clearAllErrors();
+            
+            try {
+                // Create user account with email and password
+                const cred = await auth.createUserWithEmailAndPassword(email, password);
+                
+                // Create user profile in Firestore with username
+                await db.collection('users').doc(cred.user.uid).set({
+                    userId: cred.user.uid,
+                    name: username,
+                    email: email,
+                    createdAt: new Date(),
+                    isGuest: false
+                });
+                
+                showMessage("Account created successfully! Welcome to Ayurveda Connect.");
+                resetAuthForm();
+            } catch (err) {
+                // Handle specific Firebase auth errors
+                if (err.code === 'auth/email-already-in-use') {
+                    showFieldError('email', 'This email is already registered. Try signing in instead.');
+                } else if (err.code === 'auth/weak-password') {
+                    showFieldError('password', 'Password is too weak. Please choose a stronger password.');
+                } else if (err.code === 'auth/invalid-email') {
+                    showFieldError('email', 'Invalid email address format.');
+                } else {
+                    authMessage.innerText = err.message;
+                }
+            }
+        } else {
+            // Handle sign-in
+            if (!validateSignInForm()) return;
+            
+            const email = authEmail.value.trim();
+            const password = authPassword.value;
+            
+            clearAllErrors();
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                showMessage("Welcome back!");
+            } catch (err) {
+                // Handle specific Firebase auth errors
+                if (err.code === 'auth/user-not-found') {
+                    showFieldError('email', 'No account found with this email. Try signing up instead.');
+                } else if (err.code === 'auth/wrong-password') {
+                    showFieldError('password', 'Incorrect password. Please try again.');
+                } else if (err.code === 'auth/invalid-email') {
+                    showFieldError('email', 'Invalid email address format.');
+                } else {
+                    authMessage.innerText = err.message;
+                }
+            }
         }
     });
 
-    // Sign Up
-    async function submitSignUp() {
-        const email = authEmail.value.trim();
-        const password = authPassword.value;
-        const name = authName.value.trim();
-        if (!email || !password || !name) {
-            authMessage.innerText = 'Fill all fields for sign up.';
-            return;
-        }
-        authMessage.innerText = '';
-        try {
-            const cred = await auth.createUserWithEmailAndPassword(email, password);
-            await db.collection('users').doc(cred.user.uid).set({
-                userId: cred.user.uid,
-                name: name,
-                email: email,
-                createdAt: new Date(),
-            });
-            resetAuthForm();
-        } catch (err) {
-            authMessage.innerText = err.message;
-        }
-    }
+    // Sign Up button click handler (switches to sign-up mode)
+    signUpBtn.addEventListener('click', () => {
+        setAuthMode(true);
+    });
 
-    // Anonymous sign in
+    // Anonymous/Guest sign in - improved with immediate feedback
     anonBtn.addEventListener('click', async () => {
-        authMessage.innerText = '';
+        clearAllErrors();
+        
+        // Show loading state
+        anonBtn.disabled = true;
+        anonBtn.innerText = 'Signing in as guest...';
+        
         try {
-            await auth.signInAnonymously();
+            // Sign in anonymously
+            const result = await auth.signInAnonymously();
+            
+            // Create guest profile immediately in Firestore
+            const guestProfile = {
+                userId: result.user.uid,
+                name: "Guest User",
+                email: "",
+                createdAt: new Date(),
+                isGuest: true
+            };
+            
+            await db.collection('users').doc(result.user.uid).set(guestProfile);
+            
+            // Show success message
+            showMessage("Welcome! You're now browsing as a guest. You can view content and participate in discussions.");
+            
         } catch (err) {
-            authMessage.innerText = err.message;
+            authMessage.innerText = 'Failed to sign in as guest: ' + err.message;
+            console.error('Anonymous sign-in error:', err);
+        } finally {
+            // Reset button state
+            anonBtn.disabled = false;
+            anonBtn.innerText = 'Continue as Guest';
         }
     });
 
@@ -314,30 +499,57 @@
     // ---- Get Profile ----
     async function getProfile(uid) {
         if (!uid) return null;
-        const userDoc = await db.collection('users').doc(uid).get();
-        if (userDoc.exists) return userDoc.data();
-        // For anonymous, create basic profile
-        if (auth.currentUser && auth.currentUser.isAnonymous) {
-            const anonProfile = {
-                userId: uid,
-                name: "Anonymous",
-                email: "",
-                createdAt: new Date(),
-            };
-            await db.collection('users').doc(uid).set(anonProfile);
-            return anonProfile;
+        
+        try {
+            const userDoc = await db.collection('users').doc(uid).get();
+            if (userDoc.exists) {
+                return userDoc.data();
+            }
+            
+            // If no profile exists and user is anonymous, create a basic guest profile
+            if (auth.currentUser && auth.currentUser.isAnonymous) {
+                const guestProfile = {
+                    userId: uid,
+                    name: "Guest User",
+                    email: "",
+                    createdAt: new Date(),
+                    isGuest: true
+                };
+                await db.collection('users').doc(uid).set(guestProfile);
+                return guestProfile;
+            }
+            
+            return null;
+        } catch (err) {
+            console.error('Error getting profile:', err);
+            return null;
         }
-        return null;
     }
 
     // ---- Render Profile ----
     function renderProfile(profile, firebaseUser) {
-        profileAvatar.innerText = (profile.name || "?")[0].toUpperCase();
-        profileName.innerText = `Welcome, ${profile.name || "User"}!`;
-        profileRole.innerText = firebaseUser.isAnonymous ? "Guest User" : (profile.email || "");
-        profileDetailsName.innerText = profile.name || "";
-        profileDetailsEmail.innerText = profile.email || "(anonymous)";
-        profileDetailsId.innerText = profile.userId || firebaseUser.uid || "";
+        // Default values for profile display
+        const displayName = profile.name || "User";
+        const isGuest = firebaseUser.isAnonymous || profile.isGuest;
+        
+        // Update profile avatar with first letter of name
+        profileAvatar.innerText = displayName[0].toUpperCase();
+        
+        // Update profile header with appropriate greeting
+        if (isGuest) {
+            profileName.innerText = `Welcome, ${displayName}!`;
+            profileRole.innerText = "Guest User - Limited access";
+            profileAvatar.className = "w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center font-bold text-xl text-gray-700";
+        } else {
+            profileName.innerText = `Welcome, ${displayName}!`;
+            profileRole.innerText = profile.email || "Registered User";
+            profileAvatar.className = "w-12 h-12 bg-teal-200 rounded-full flex items-center justify-center font-bold text-xl text-teal-800";
+        }
+        
+        // Update profile details page
+        profileDetailsName.innerText = profile.name || "Not set";
+        profileDetailsEmail.innerText = isGuest ? "(Guest - no email)" : (profile.email || "Not set");
+        profileDetailsId.innerText = profile.userId || firebaseUser.uid || "Unknown";
     }
 
     // ---- Real-Time Feed ----
@@ -412,24 +624,33 @@
     window.addEventListener('DOMContentLoaded', () => {
         initializeFirebase();
         if (!auth) return;
+        
+        // Initialize auth form in sign-in mode
+        setAuthMode(false);
+        
         // Token-based sign-in if available
         if (window.__initial_auth_token) {
             auth.signInWithCustomToken(window.__initial_auth_token)
                 .catch(err => showMessage("Token sign-in failed: " + err.message));
         }
-        // Auth state observer
+        
+        // Auth state observer - handles automatic UI updates when user signs in/out
         auth.onAuthStateChanged(async (user) => {
             currentUser = user;
             setAuthUI(!!user);
+            
             if (user) {
+                // User is signed in - get/create their profile and load dashboard
                 userProfile = await getProfile(user.uid);
                 renderProfile(userProfile || {}, user);
                 subscribeFeed();
             } else {
+                // User is signed out - clear feed and profile data
                 feedList.innerHTML = '';
                 userProfile = null;
             }
         });
+        
         // Default to dashboard view
         showSection('dashboard');
     });
