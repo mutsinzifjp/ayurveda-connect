@@ -11,7 +11,12 @@
     <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #1f2937; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f3f4f6; 
+            color: #1f2937; 
+            text-size-adjust: 100%;
+        }
         .fade { transition: opacity 0.3s; }
     </style>
 </head>
@@ -856,6 +861,11 @@
             signUpBtn.innerText = 'Creating Account...';
             
             try {
+                // Additional check to ensure auth object has the required method
+                if (!auth || typeof auth.createUserWithEmailAndPassword !== 'function') {
+                    throw new Error('Authentication service method not available');
+                }
+                
                 // Create user account with email and password
                 const cred = await auth.createUserWithEmailAndPassword(email, password);
                 
@@ -873,14 +883,16 @@
             } catch (err) {
                 console.error('Sign-up error:', err);
                 // Handle specific Firebase auth errors
-                if (err.code === 'auth/email-already-in-use') {
+                if (err.message && err.message.includes('method not available')) {
+                    authMessage.innerText = 'Authentication service error. Please refresh the page and try again.';
+                } else if (err.code === 'auth/email-already-in-use') {
                     showFieldError('email', 'This email is already registered. Try signing in instead.');
                 } else if (err.code === 'auth/weak-password') {
                     showFieldError('password', 'Password is too weak. Please choose a stronger password.');
                 } else if (err.code === 'auth/invalid-email') {
                     showFieldError('email', 'Invalid email address format.');
                 } else {
-                    authMessage.innerText = 'Failed to create account: ' + err.message;
+                    authMessage.innerText = 'Failed to create account: ' + (err.message || 'Unknown error');
                 }
             } finally {
                 // Re-enable form
@@ -901,12 +913,19 @@
             signInBtn.innerText = 'Signing In...';
             
             try {
+                // Additional check to ensure auth object has the required method
+                if (!auth || typeof auth.signInWithEmailAndPassword !== 'function') {
+                    throw new Error('Authentication service method not available');
+                }
+                
                 await auth.signInWithEmailAndPassword(email, password);
                 showMessage("Welcome back!");
             } catch (err) {
                 console.error('Sign-in error:', err);
                 // Handle specific Firebase auth errors
-                if (err.code === 'auth/user-not-found') {
+                if (err.message && err.message.includes('method not available')) {
+                    authMessage.innerText = 'Authentication service error. Please refresh the page and try again.';
+                } else if (err.code === 'auth/user-not-found') {
                     showFieldError('email', 'No account found with this email. Try signing up instead.');
                 } else if (err.code === 'auth/wrong-password') {
                     showFieldError('password', 'Incorrect password. Please try again.');
@@ -915,7 +934,7 @@
                 } else if (err.code === 'auth/too-many-requests') {
                     authMessage.innerText = 'Too many failed attempts. Please try again later.';
                 } else {
-                    authMessage.innerText = 'Failed to sign in: ' + err.message;
+                    authMessage.innerText = 'Failed to sign in: ' + (err.message || 'Unknown error');
                 }
             } finally {
                 // Re-enable form
@@ -941,6 +960,13 @@
             return;
         }
         
+        // Additional check to ensure auth object has the signInAnonymously method
+        if (!auth || typeof auth.signInAnonymously !== 'function') {
+            authMessage.innerText = 'Authentication service is not available. Please refresh the page and try again.';
+            console.error('Auth object is missing or signInAnonymously method is not available:', auth);
+            return;
+        }
+        
         // Show loading state
         anonBtn.disabled = true;
         anonBtn.innerText = 'Signing in as guest...';
@@ -948,6 +974,11 @@
         try {
             // Sign in anonymously
             const result = await auth.signInAnonymously();
+            
+            // Validate the result before proceeding
+            if (!result || !result.user || !result.user.uid) {
+                throw new Error('Invalid authentication result received');
+            }
             
             // Create guest profile immediately in Firestore
             const guestProfile = {
@@ -967,8 +998,10 @@
             console.error('Anonymous sign-in error:', err);
             if (err.code === 'auth/operation-not-allowed') {
                 authMessage.innerText = 'Guest sign-in is not enabled. Please contact support or try creating an account.';
+            } else if (err.message && err.message.includes('signInAnonymously')) {
+                authMessage.innerText = 'Authentication service error. Please refresh the page and try again.';
             } else {
-                authMessage.innerText = 'Failed to sign in as guest: ' + err.message;
+                authMessage.innerText = 'Failed to sign in as guest: ' + (err.message || 'Unknown error');
             }
         } finally {
             // Reset button state
@@ -1010,7 +1043,13 @@
     
     // Helper function to check if Firebase is ready
     function isFirebaseReady() {
-        return auth && db && firebaseApp;
+        return auth && 
+               db && 
+               firebaseApp && 
+               typeof auth.signInAnonymously === 'function' &&
+               typeof auth.signInWithEmailAndPassword === 'function' &&
+               typeof auth.createUserWithEmailAndPassword === 'function' &&
+               typeof db.collection === 'function';
     }
 
     // ---- Auth State & UI Management ----
