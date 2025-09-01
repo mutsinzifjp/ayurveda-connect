@@ -74,6 +74,7 @@
                     <button class="nav-btn px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-teal-600 rounded-full hover:bg-teal-100 transition-colors duration-200" data-page="dashboard">Dashboard</button>
                     <button class="nav-btn px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-teal-600 rounded-full hover:bg-teal-100 transition-colors duration-200" data-page="profile">My Profile</button>
                     <button class="nav-btn px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-teal-600 rounded-full hover:bg-teal-100 transition-colors duration-200" data-page="mentors">Mentors</button>
+                    <button class="nav-btn px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-teal-600 rounded-full hover:bg-teal-100 transition-colors duration-200" data-page="knowledge">Knowledge</button>
                     <button class="nav-btn px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-teal-600 rounded-full hover:bg-teal-100 transition-colors duration-200" data-page="jobs">Jobs</button>
                     <button id="sign-out-btn" class="px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-red-500 rounded-full hover:bg-red-100 transition-colors duration-200">Sign Out</button>
                 </nav>
@@ -122,40 +123,372 @@
                 <!-- Profile Page -->
                 <section id="profile-page" class="page-section hidden">
                     <h3 class="text-xl font-bold mb-4">My Profile</h3>
-                    <div class="bg-gray-50 p-6 rounded-lg shadow-inner w-full max-w-md">
-                        <div class="mb-4">
-                            <span class="font-semibold">Name:</span>
-                            <span id="profile-details-name"></span>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Profile Display -->
+                        <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
+                            <h4 class="text-lg font-semibold mb-4">Profile Information</h4>
+                            <div class="mb-4">
+                                <span class="font-semibold">Name:</span>
+                                <span id="profile-details-name"></span>
+                            </div>
+                            <div class="mb-4">
+                                <span class="font-semibold">Email:</span>
+                                <span id="profile-details-email"></span>
+                            </div>
+                            <div class="mb-4">
+                                <span class="font-semibold">Bio:</span>
+                                <p id="profile-details-bio" class="text-gray-700 mt-1"></p>
+                            </div>
+                            <div class="mb-4">
+                                <span class="font-semibold">User ID:</span>
+                                <span id="profile-details-id"></span>
+                            </div>
                         </div>
-                        <div class="mb-4">
-                            <span class="font-semibold">Email:</span>
-                            <span id="profile-details-email"></span>
-                        </div>
-                        <div class="mb-4">
-                            <span class="font-semibold">User ID:</span>
-                            <span id="profile-details-id"></span>
+                        
+                        <!-- Profile Edit Form -->
+                        <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
+                            <h4 class="text-lg font-semibold mb-4">Edit Profile</h4>
+                            <form id="profile-form" class="space-y-4">
+                                <div>
+                                    <label for="profile-name-input" class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                                    <input type="text" id="profile-name-input" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Enter your name">
+                                </div>
+                                <div>
+                                    <label for="profile-bio-input" class="block text-sm font-medium text-gray-700 mb-2">Bio / Professional Summary</label>
+                                    <textarea id="profile-bio-input" rows="4" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Tell us about yourself, your experience with Ayurveda, or your professional background..."></textarea>
+                                </div>
+                                <button type="submit" class="w-full px-6 py-3 bg-teal-600 text-white font-semibold rounded-md shadow-lg hover:bg-teal-700 transition-colors duration-300">Update Profile</button>
+                            </form>
+                            <div id="profile-error" class="text-red-500 text-sm mt-2 hidden"></div>
+                            <div id="profile-success" class="text-green-500 text-sm mt-2 hidden"></div>
                         </div>
                     </div>
                 </section>
                 <!-- Mentors Page -->
                 <section id="mentors-page" class="page-section hidden">
-                    <h3 class="text-xl font-bold mb-4">Mentors</h3>
-                    <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
-                        Coming soon: Connect with Ayurveda mentors and practitioners.
+                    <h3 class="text-xl font-bold mb-4">Find Your Ayurveda Mentor</h3>
+                    <p class="text-gray-600 mb-6">Connect with experienced practitioners who can guide your journey in Ayurveda.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Mentor Profile 1 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-teal-200 rounded-full flex items-center justify-center font-bold text-xl text-teal-800 mr-3">
+                                    D
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-800">Dr. Priya Sharma</h4>
+                                    <p class="text-sm text-teal-600 font-medium">Ayurvedic Practitioner</p>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                With over 15 years of experience in classical Ayurveda, Dr. Sharma specializes in digestive health and herbal medicine. She holds a BAMS degree and has helped hundreds of patients achieve optimal wellness.
+                            </p>
+                            <button class="mentorship-btn w-full px-4 py-2 bg-teal-600 text-white font-semibold rounded-md hover:bg-teal-700 transition-colors duration-300" data-mentor="Dr. Priya Sharma">
+                                Request Mentorship
+                            </button>
+                        </div>
+                        
+                        <!-- Mentor Profile 2 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-indigo-200 rounded-full flex items-center justify-center font-bold text-xl text-indigo-800 mr-3">
+                                    A
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-800">Acharya Ravi Kumar</h4>
+                                    <p class="text-sm text-indigo-600 font-medium">Panchakarma Specialist</p>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Master practitioner of Panchakarma therapies with 20+ years of experience. Acharya Kumar has trained under renowned Ayurvedic physicians in Kerala and specializes in detoxification treatments.
+                            </p>
+                            <button class="mentorship-btn w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition-colors duration-300" data-mentor="Acharya Ravi Kumar">
+                                Request Mentorship
+                            </button>
+                        </div>
+                        
+                        <!-- Mentor Profile 3 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-pink-200 rounded-full flex items-center justify-center font-bold text-xl text-pink-800 mr-3">
+                                    S
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-800">Dr. Sarah Chen</h4>
+                                    <p class="text-sm text-pink-600 font-medium">Research Scholar</p>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                PhD in Ayurvedic Medicine and modern clinical research. Dr. Chen bridges traditional wisdom with contemporary science, focusing on evidence-based approaches to Ayurvedic treatments.
+                            </p>
+                            <button class="mentorship-btn w-full px-4 py-2 bg-pink-600 text-white font-semibold rounded-md hover:bg-pink-700 transition-colors duration-300" data-mentor="Dr. Sarah Chen">
+                                Request Mentorship
+                            </button>
+                        </div>
+                        
+                        <!-- Mentor Profile 4 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-green-200 rounded-full flex items-center justify-center font-bold text-xl text-green-800 mr-3">
+                                    V
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-800">Vaidya Meera Patel</h4>
+                                    <p class="text-sm text-green-600 font-medium">Yoga & Wellness Expert</p>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Integrative approach combining Ayurveda, Yoga, and meditation. Vaidya Patel has authored several books on holistic wellness and teaches at international Ayurveda conferences.
+                            </p>
+                            <button class="mentorship-btn w-full px-4 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors duration-300" data-mentor="Vaidya Meera Patel">
+                                Request Mentorship
+                            </button>
+                        </div>
+                        
+                        <!-- Mentor Profile 5 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center font-bold text-xl text-purple-800 mr-3">
+                                    K
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-800">Dr. Krishna Rao</h4>
+                                    <p class="text-sm text-purple-600 font-medium">Pulse Diagnosis Master</p>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Renowned for expertise in Nadi Pariksha (pulse diagnosis) and constitutional assessment. Dr. Rao has taught thousands of students the art of reading the pulse for health insights.
+                            </p>
+                            <button class="mentorship-btn w-full px-4 py-2 bg-purple-600 text-white font-semibold rounded-md hover:bg-purple-700 transition-colors duration-300" data-mentor="Dr. Krishna Rao">
+                                Request Mentorship
+                            </button>
+                        </div>
+                        
+                        <!-- Mentor Profile 6 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-blue-200 rounded-full flex items-center justify-center font-bold text-xl text-blue-800 mr-3">
+                                    L
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-800">Dr. Lisa Thompson</h4>
+                                    <p class="text-sm text-blue-600 font-medium">Herbal Medicine Specialist</p>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Western physician who studied Ayurveda in India for 8 years. Dr. Thompson specializes in herbal formulations and has pioneered integrative treatment protocols in clinical settings.
+                            </p>
+                            <button class="mentorship-btn w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors duration-300" data-mentor="Dr. Lisa Thompson">
+                                Request Mentorship
+                            </button>
+                        </div>
                     </div>
                 </section>
                 <!-- Jobs Page -->
                 <section id="jobs-page" class="page-section hidden">
-                    <h3 class="text-xl font-bold mb-4">Jobs & Internships</h3>
-                    <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
-                        Coming soon: Ayurveda job openings and internships worldwide.
+                    <h3 class="text-xl font-bold mb-4">Ayurveda Career Opportunities</h3>
+                    <p class="text-gray-600 mb-6">Discover job openings and internship opportunities in the field of Ayurveda worldwide.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Job 1 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                            <div class="mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Ayurvedic Practitioner</h4>
+                                <p class="text-teal-600 font-medium text-sm">Wellness Institute of America</p>
+                                <p class="text-gray-500 text-sm">📍 California, USA</p>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Full-time position for qualified Ayurvedic practitioner. BAMS degree required. Experience with Panchakarma therapies preferred.
+                            </p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Full-time</span>
+                                <button class="px-4 py-2 bg-teal-600 text-white text-sm rounded hover:bg-teal-700 transition-colors">Apply Now</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Job 2 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                            <div class="mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Research Associate - Ayurveda</h4>
+                                <p class="text-indigo-600 font-medium text-sm">International Journal of Ayurveda</p>
+                                <p class="text-gray-500 text-sm">📍 London, UK</p>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Seeking researcher with PhD in Ayurvedic Medicine for clinical studies. Experience in evidence-based research essential.
+                            </p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Contract</span>
+                                <button class="px-4 py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition-colors">Apply Now</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Job 3 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                            <div class="mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Ayurveda Consultant</h4>
+                                <p class="text-green-600 font-medium text-sm">Holistic Health Center</p>
+                                <p class="text-gray-500 text-sm">📍 Mumbai, India</p>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Part-time consulting role for experienced Ayurvedic physician. Flexible hours, work with diverse clientele.
+                            </p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Part-time</span>
+                                <button class="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors">Apply Now</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Job 4 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                            <div class="mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Panchakarma Therapist</h4>
+                                <p class="text-purple-600 font-medium text-sm">Ayurveda Retreat Center</p>
+                                <p class="text-gray-500 text-sm">📍 Kerala, India</p>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Experienced therapist needed for luxury retreat center. Certification in Panchakarma treatments required.
+                            </p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Full-time</span>
+                                <button class="px-4 py-2 bg-purple-600 text-white text-sm rounded hover:bg-purple-700 transition-colors">Apply Now</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Job 5 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                            <div class="mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Ayurveda Content Writer</h4>
+                                <p class="text-pink-600 font-medium text-sm">Digital Health Platform</p>
+                                <p class="text-gray-500 text-sm">📍 Remote</p>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Create engaging content about Ayurvedic practices for online platform. Background in Ayurveda and strong writing skills required.
+                            </p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Remote</span>
+                                <button class="px-4 py-2 bg-pink-600 text-white text-sm rounded hover:bg-pink-700 transition-colors">Apply Now</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Job 6 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                            <div class="mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Ayurveda Intern</h4>
+                                <p class="text-blue-600 font-medium text-sm">Traditional Medicine College</p>
+                                <p class="text-gray-500 text-sm">📍 Toronto, Canada</p>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                6-month internship program for Ayurveda students. Hands-on experience with patient care and herbal medicine preparation.
+                            </p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Internship</span>
+                                <button class="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors">Apply Now</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Job 7 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                            <div class="mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Herb Quality Specialist</h4>
+                                <p class="text-orange-600 font-medium text-sm">Organic Herbs International</p>
+                                <p class="text-gray-500 text-sm">📍 Oregon, USA</p>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Ensure quality and authenticity of Ayurvedic herbs for international distribution. Knowledge of herb identification essential.
+                            </p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Full-time</span>
+                                <button class="px-4 py-2 bg-orange-600 text-white text-sm rounded hover:bg-orange-700 transition-colors">Apply Now</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Job 8 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                            <div class="mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Ayurveda Workshop Facilitator</h4>
+                                <p class="text-cyan-600 font-medium text-sm">Global Wellness Events</p>
+                                <p class="text-gray-500 text-sm">📍 Multiple Locations</p>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Lead workshops and seminars on Ayurvedic principles worldwide. Travel required, excellent communication skills needed.
+                            </p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Contract</span>
+                                <button class="px-4 py-2 bg-cyan-600 text-white text-sm rounded hover:bg-cyan-700 transition-colors">Apply Now</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Job 9 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                            <div class="mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Clinical Ayurveda Coordinator</h4>
+                                <p class="text-red-600 font-medium text-sm">Integrative Medicine Clinic</p>
+                                <p class="text-gray-500 text-sm">📍 Sydney, Australia</p>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Coordinate Ayurvedic treatments within integrative medical practice. Bridge traditional and modern healthcare approaches.
+                            </p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Full-time</span>
+                                <button class="px-4 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors">Apply Now</button>
+                            </div>
+                        </div>
                     </div>
                 </section>
                 <!-- Knowledge Hub Page -->
                 <section id="knowledge-page" class="page-section hidden">
                     <h3 class="text-xl font-bold mb-4">Knowledge Hub</h3>
-                    <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
-                        Coming soon: AI-powered summaries of Ayurveda research.
+                    <p class="text-gray-600 mb-6">Search for Ayurvedic topics and get AI-powered summaries with research sources.</p>
+                    
+                    <!-- Search Form -->
+                    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 mb-6">
+                        <form id="knowledge-search-form" class="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                            <input type="text" id="knowledge-search-input" class="flex-grow p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Search for Ayurvedic topics (e.g., 'turmeric benefits', 'dosha types', 'panchakarma')" required>
+                            <button type="submit" id="knowledge-search-btn" class="px-6 py-3 bg-teal-600 text-white font-semibold rounded-md shadow-lg hover:bg-teal-700 transition-colors duration-300">
+                                Search
+                            </button>
+                        </form>
+                        <div id="knowledge-error" class="text-red-500 text-sm mt-2 hidden"></div>
+                    </div>
+                    
+                    <!-- Search Results -->
+                    <div id="knowledge-results" class="hidden">
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">Search Results</h4>
+                            <div id="knowledge-summary" class="prose max-w-none mb-4">
+                                <!-- AI-generated summary will appear here -->
+                            </div>
+                            <div id="knowledge-sources" class="border-t pt-4">
+                                <h5 class="text-md font-semibold text-gray-700 mb-2">Sources</h5>
+                                <div id="knowledge-sources-list">
+                                    <!-- Source links will appear here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Loading State -->
+                    <div id="knowledge-loading" class="hidden">
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <div class="flex items-center justify-center">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mr-3"></div>
+                                <span class="text-gray-600">Searching and generating summary...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Example Searches -->
+                    <div class="mt-8">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Popular Topics</h4>
+                        <div class="flex flex-wrap gap-2">
+                            <button class="example-search px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors" data-query="turmeric health benefits">Turmeric Benefits</button>
+                            <button class="example-search px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors" data-query="ayurvedic body types doshas">Dosha Types</button>
+                            <button class="example-search px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors" data-query="panchakarma detoxification therapy">Panchakarma Therapy</button>
+                            <button class="example-search px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors" data-query="ayurvedic diet nutrition">Ayurvedic Diet</button>
+                            <button class="example-search px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors" data-query="meditation mindfulness ayurveda">Meditation & Ayurveda</button>
+                            <button class="example-search px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors" data-query="herbal medicine ayurveda">Herbal Medicine</button>
+                        </div>
                     </div>
                 </section>
             </div>
@@ -197,12 +530,28 @@
     // Profile Details
     const profileDetailsName = document.getElementById('profile-details-name');
     const profileDetailsEmail = document.getElementById('profile-details-email');
+    const profileDetailsBio = document.getElementById('profile-details-bio');
     const profileDetailsId = document.getElementById('profile-details-id');
+    // Profile Form
+    const profileForm = document.getElementById('profile-form');
+    const profileNameInput = document.getElementById('profile-name-input');
+    const profileBioInput = document.getElementById('profile-bio-input');
+    const profileError = document.getElementById('profile-error');
+    const profileSuccess = document.getElementById('profile-success');
     // Feed
     const postForm = document.getElementById('post-form');
     const postContent = document.getElementById('post-content');
     const feedList = document.getElementById('feed-list');
     const postError = document.getElementById('post-error');
+    // Knowledge Hub
+    const knowledgeSearchForm = document.getElementById('knowledge-search-form');
+    const knowledgeSearchInput = document.getElementById('knowledge-search-input');
+    const knowledgeSearchBtn = document.getElementById('knowledge-search-btn');
+    const knowledgeError = document.getElementById('knowledge-error');
+    const knowledgeResults = document.getElementById('knowledge-results');
+    const knowledgeLoading = document.getElementById('knowledge-loading');
+    const knowledgeSummary = document.getElementById('knowledge-summary');
+    const knowledgeSourcesList = document.getElementById('knowledge-sources-list');
 
     // ---- State ----
     let currentUser = null;
@@ -549,7 +898,12 @@
         // Update profile details page
         profileDetailsName.innerText = profile.name || "Not set";
         profileDetailsEmail.innerText = isGuest ? "(Guest - no email)" : (profile.email || "Not set");
+        profileDetailsBio.innerText = profile.bio || "No bio provided yet.";
         profileDetailsId.innerText = profile.userId || firebaseUser.uid || "Unknown";
+        
+        // Populate profile form with current data
+        profileNameInput.value = profile.name || "";
+        profileBioInput.value = profile.bio || "";
     }
 
     // ---- Real-Time Feed ----
@@ -577,6 +931,254 @@
             }, err => {
                 showMessage("Error loading feed: " + err.message);
             });
+    }
+
+    // ---- Profile Form ----
+    profileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        profileError.classList.add('hidden');
+        profileSuccess.classList.add('hidden');
+        
+        const name = profileNameInput.value.trim();
+        const bio = profileBioInput.value.trim();
+        
+        if (!name) {
+            profileError.innerText = "Name is required.";
+            profileError.classList.remove('hidden');
+            return;
+        }
+        
+        if (!currentUser) {
+            profileError.innerText = "You must be signed in to update your profile.";
+            profileError.classList.remove('hidden');
+            return;
+        }
+        
+        try {
+            // Update user profile in Firestore using setDoc with merge
+            const updatedProfile = {
+                ...userProfile,
+                name: name,
+                bio: bio,
+                updatedAt: new Date()
+            };
+            
+            await db.collection('users').doc(currentUser.uid).set(updatedProfile, { merge: true });
+            
+            // Update local profile state
+            userProfile = updatedProfile;
+            
+            // Re-render profile with updated data
+            renderProfile(userProfile, currentUser);
+            
+            // Show success message
+            profileSuccess.innerText = "Profile updated successfully!";
+            profileSuccess.classList.remove('hidden');
+            
+            // Also show global success message
+            showMessage("Profile updated successfully!");
+            
+        } catch (err) {
+            profileError.innerText = "Error updating profile: " + err.message;
+            profileError.classList.remove('hidden');
+        }
+    });
+
+    // ---- Mentorship Requests ----
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('mentorship-btn')) {
+            e.preventDefault();
+            const mentorName = e.target.dataset.mentor;
+            
+            if (!currentUser) {
+                showMessage("Please sign in to request mentorship.", 4000);
+                return;
+            }
+            
+            // Show loading state
+            const originalText = e.target.innerText;
+            e.target.disabled = true;
+            e.target.innerText = 'Sending Request...';
+            
+            // Simulate request processing
+            setTimeout(() => {
+                // Reset button state
+                e.target.disabled = false;
+                e.target.innerText = originalText;
+                
+                // Show success message
+                showMessage(`Mentorship request sent to ${mentorName}! They will contact you soon.`, 5000);
+            }, 1500);
+        }
+    });
+
+    // ---- Knowledge Hub Search ----
+    knowledgeSearchForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const query = knowledgeSearchInput.value.trim();
+        
+        if (!query) {
+            knowledgeError.innerText = "Please enter a search query.";
+            knowledgeError.classList.remove('hidden');
+            return;
+        }
+        
+        await performKnowledgeSearch(query);
+    });
+    
+    // Handle example search buttons
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('example-search')) {
+            const query = e.target.dataset.query;
+            knowledgeSearchInput.value = query;
+            performKnowledgeSearch(query);
+        }
+    });
+    
+    async function performKnowledgeSearch(query) {
+        // Hide error and results, show loading
+        knowledgeError.classList.add('hidden');
+        knowledgeResults.classList.add('hidden');
+        knowledgeLoading.classList.remove('hidden');
+        
+        // Update button state
+        const originalBtnText = knowledgeSearchBtn.innerText;
+        knowledgeSearchBtn.disabled = true;
+        knowledgeSearchBtn.innerText = 'Searching...';
+        
+        try {
+            // Note: In a real implementation, you would call the Gemini API here
+            // For now, we'll simulate the API call with mock data
+            await simulateGeminiSearch(query);
+            
+        } catch (error) {
+            knowledgeLoading.classList.add('hidden');
+            knowledgeError.innerText = "Error performing search: " + error.message;
+            knowledgeError.classList.remove('hidden');
+        } finally {
+            // Reset button state
+            knowledgeSearchBtn.disabled = false;
+            knowledgeSearchBtn.innerText = originalBtnText;
+        }
+    }
+    
+    async function simulateGeminiSearch(query) {
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Mock responses based on query keywords
+        let summary, sources;
+        
+        if (query.toLowerCase().includes('turmeric')) {
+            summary = `
+                <h5 class="font-semibold text-gray-800 mb-2">Turmeric (Curcuma longa) in Ayurveda</h5>
+                <p class="text-gray-700 mb-3">
+                    Turmeric, known as "Haridra" in Sanskrit, is one of the most revered herbs in Ayurvedic medicine. 
+                    It is classified as having a bitter and pungent taste (tikta-katu rasa) with heating potency (ushna virya).
+                </p>
+                <p class="text-gray-700 mb-3">
+                    <strong>Key Benefits:</strong> Anti-inflammatory properties, digestive support, blood purification, 
+                    skin health enhancement, and immune system strengthening. The active compound curcumin has been 
+                    extensively studied for its therapeutic effects.
+                </p>
+                <p class="text-gray-700">
+                    <strong>Traditional Uses:</strong> Treatment of wounds, respiratory conditions, digestive disorders, 
+                    and as a general tonic for overall health and vitality.
+                </p>
+            `;
+            sources = [
+                { title: "Curcumin: A Review of Its Effects on Human Health", url: "#", domain: "pubmed.ncbi.nlm.nih.gov" },
+                { title: "Ayurvedic Properties of Turmeric", url: "#", domain: "ayurvedajournal.com" },
+                { title: "Traditional Uses of Curcuma longa", url: "#", domain: "ethnobotany.org" }
+            ];
+        } else if (query.toLowerCase().includes('dosha')) {
+            summary = `
+                <h5 class="font-semibold text-gray-800 mb-2">The Three Doshas: Constitutional Types in Ayurveda</h5>
+                <p class="text-gray-700 mb-3">
+                    The doshas are fundamental energetic principles that govern physiological and psychological functions. 
+                    Each person has a unique combination of these three doshas that determines their constitution (prakriti).
+                </p>
+                <p class="text-gray-700 mb-3">
+                    <strong>Vata:</strong> Governs movement, nervous system, and circulation. Associated with air and space elements.
+                    <br><strong>Pitta:</strong> Controls metabolism, digestion, and transformation. Associated with fire and water elements.
+                    <br><strong>Kapha:</strong> Provides structure, immunity, and lubrication. Associated with earth and water elements.
+                </p>
+                <p class="text-gray-700">
+                    Understanding your dominant dosha helps in choosing appropriate lifestyle, diet, and therapeutic practices 
+                    for optimal health and balance.
+                </p>
+            `;
+            sources = [
+                { title: "Constitutional Assessment in Ayurveda", url: "#", domain: "ayurvedic-research.com" },
+                { title: "The Science of Tridosha", url: "#", domain: "jams.in" },
+                { title: "Dosha Theory and Modern Applications", url: "#", domain: "integrativemedicine.org" }
+            ];
+        } else if (query.toLowerCase().includes('panchakarma')) {
+            summary = `
+                <h5 class="font-semibold text-gray-800 mb-2">Panchakarma: The Five-Fold Detoxification Therapy</h5>
+                <p class="text-gray-700 mb-3">
+                    Panchakarma is Ayurveda's premier detoxification and rejuvenation program. It consists of five primary 
+                    procedures designed to eliminate toxins (ama) and restore natural balance to the body and mind.
+                </p>
+                <p class="text-gray-700 mb-3">
+                    <strong>The Five Procedures:</strong> Vamana (therapeutic vomiting), Virechana (purgation), 
+                    Nasya (nasal administration), Basti (medicated enemas), and Raktamokshana (bloodletting).
+                </p>
+                <p class="text-gray-700">
+                    <strong>Benefits:</strong> Deep cellular detoxification, improved immunity, enhanced mental clarity, 
+                    and prevention of disease. The treatment is preceded by preparatory therapies and followed by 
+                    rejuvenation protocols.
+                </p>
+            `;
+            sources = [
+                { title: "Clinical Efficacy of Panchakarma Therapy", url: "#", domain: "ayurvedajournal.org" },
+                { title: "Panchakarma: Principles and Practice", url: "#", domain: "ancientsci.com" },
+                { title: "Modern Research on Ayurvedic Detoxification", url: "#", domain: "pubmed.gov" }
+            ];
+        } else {
+            // Generic Ayurveda response
+            summary = `
+                <h5 class="font-semibold text-gray-800 mb-2">Ayurveda: The Science of Life</h5>
+                <p class="text-gray-700 mb-3">
+                    Ayurveda is a comprehensive system of medicine that originated in India over 5,000 years ago. 
+                    It focuses on maintaining health through balancing the body, mind, and consciousness according to 
+                    individual constitution and environmental factors.
+                </p>
+                <p class="text-gray-700 mb-3">
+                    <strong>Core Principles:</strong> The theory of five elements (panchamahabhutas), three doshas 
+                    (vata, pitta, kapha), and the concept that health is achieved through balance while disease 
+                    results from imbalance.
+                </p>
+                <p class="text-gray-700">
+                    <strong>Holistic Approach:</strong> Ayurveda addresses the root cause of illness rather than just 
+                    symptoms, emphasizing prevention, natural healing, and personalized treatment approaches.
+                </p>
+            `;
+            sources = [
+                { title: "Fundamentals of Ayurvedic Medicine", url: "#", domain: "ayurveda-research.com" },
+                { title: "Evidence-Based Ayurveda", url: "#", domain: "pubmed.ncbi.nlm.nih.gov" },
+                { title: "Traditional Knowledge Systems", url: "#", domain: "who.int" }
+            ];
+        }
+        
+        // Hide loading and show results
+        knowledgeLoading.classList.add('hidden');
+        
+        // Populate summary
+        knowledgeSummary.innerHTML = summary;
+        
+        // Populate sources
+        knowledgeSourcesList.innerHTML = sources.map(source => `
+            <div class="mb-2">
+                <a href="${source.url}" class="text-teal-600 hover:text-teal-800 font-medium" target="_blank" rel="noopener">
+                    ${source.title}
+                </a>
+                <span class="text-gray-500 text-sm ml-2">(${source.domain})</span>
+            </div>
+        `).join('');
+        
+        // Show results
+        knowledgeResults.classList.remove('hidden');
     }
 
     // ---- Post Form ----
