@@ -530,7 +530,7 @@
                 console.log("Mock Firebase app initialized with config:", config);
                 return { name: appId || 'default' };
             },
-            auth: () => ({
+            auth: (app) => ({
                 currentUser: null,
                 signInWithEmailAndPassword: async (email, password) => {
                     console.log("Mock sign-in:", email);
@@ -592,7 +592,7 @@
                     return { user: { uid: 'mock-token-user', email: 'token@example.com', isAnonymous: false } };
                 }
             }),
-            firestore: () => ({
+            firestore: (app) => ({
                 collection: (name) => ({
                     doc: (id) => ({
                         get: async () => ({
@@ -987,8 +987,8 @@
         try {
             if (window.__firebase_config && firebase) {
                 firebaseApp = firebase.initializeApp(window.__firebase_config, window.__app_id || undefined);
-                auth = firebase.auth();
-                db = firebase.firestore();
+                auth = firebase.auth(firebaseApp);
+                db = firebase.firestore(firebaseApp);
                 
                 if (useFirebaseMock) {
                     console.log("Firebase mock initialized successfully");
