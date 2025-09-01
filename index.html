@@ -794,6 +794,8 @@
                 // Handle specific Firebase auth errors
                 if (err.message && err.message.includes('method not available')) {
                     authMessage.innerText = 'Authentication service error. Please refresh the page and try again.';
+                } else if (err.code === 'auth/configuration-not-found') {
+                    authMessage.innerText = 'Authentication service configuration error. Account creation is not properly configured. Please contact support.';
                 } else if (err.code === 'auth/email-already-in-use') {
                     showFieldError('email', 'This email is already registered. Try signing in instead.');
                 } else if (err.code === 'auth/weak-password') {
@@ -834,6 +836,8 @@
                 // Handle specific Firebase auth errors
                 if (err.message && err.message.includes('method not available')) {
                     authMessage.innerText = 'Authentication service error. Please refresh the page and try again.';
+                } else if (err.code === 'auth/configuration-not-found') {
+                    authMessage.innerText = 'Authentication service configuration error. Sign-in is not properly configured. Please contact support.';
                 } else if (err.code === 'auth/user-not-found') {
                     showFieldError('email', 'No account found with this email. Try signing up instead.');
                 } else if (err.code === 'auth/wrong-password') {
@@ -907,6 +911,8 @@
             console.error('Anonymous sign-in error:', err);
             if (err.code === 'auth/operation-not-allowed') {
                 authMessage.innerText = 'Guest sign-in is not enabled. Please contact support or try creating an account.';
+            } else if (err.code === 'auth/configuration-not-found') {
+                authMessage.innerText = 'Authentication service configuration error. Anonymous sign-in is not properly configured. Please contact support or try creating an account instead.';
             } else if (err.message && err.message.includes('signInAnonymously')) {
                 authMessage.innerText = 'Authentication service error. Please refresh the page and try again.';
             } else {
