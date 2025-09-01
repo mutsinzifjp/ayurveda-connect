@@ -6,16 +6,506 @@
     <title>Ayurveda Connect</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Firebase SDKs - Using Modular SDK via CDN -->
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f3f4f6; 
+            color: #1f2937; 
+            /* Fix for the compatibility warning */
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+        .fade { transition: opacity 0.3s; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    <!-- Main Content Container -->
+    <div class="flex-grow flex flex-col justify-center items-center p-4" id="main-container">
+        <!-- Auth Page -->
+        <div id="auth-page" class="flex flex-col items-center justify-center text-center p-8 bg-white rounded-lg shadow-lg max-w-lg w-full fade">
+            <h1 class="text-4xl font-bold text-teal-600 mb-4">Ayurveda Connect</h1>
+            <p class="text-lg text-gray-700 mb-6">
+                Sign in to join the Ayurveda community and access real-time posts, mentors, jobs, and more.
+            </p>
+            <form id="auth-form" class="space-y-3 w-full">
+                <!-- Username field - only shown during sign up -->
+                <input type="text" id="auth-name" class="w-full p-3 border rounded-md" placeholder="Your Username" autocomplete="name" style="display:none;">
+                <div id="username-error" class="text-red-500 text-xs mt-1" style="display:none;"></div>
+                
+                <!-- Email field -->
+                <input type="email" id="auth-email" class="w-full p-3 border rounded-md" placeholder="Email" autocomplete="username">
+                <div id="email-error" class="text-red-500 text-xs mt-1" style="display:none;"></div>
+                
+                <!-- Password field -->
+                <input type="password" id="auth-password" class="w-full p-3 border rounded-md" placeholder="Password" autocomplete="current-password">
+                <div id="password-error" class="text-red-500 text-xs mt-1" style="display:none;"></div>
+                
+                <!-- Auth mode switcher -->
+                <div id="auth-mode-text" class="text-sm text-center text-gray-600 mb-2">
+                    Sign in to your account
+                </div>
+                
+                <!-- Sign in/up buttons -->
+                <div class="flex space-x-2">
+                    <button type="submit" id="sign-in-btn" class="px-6 py-2 bg-teal-600 text-white rounded-full font-semibold hover:bg-teal-700 transition-colors duration-300">Sign In</button>
+                    <button type="button" id="sign-up-btn" class="px-6 py-2 bg-indigo-600 text-white rounded-full font-semibold hover:bg-indigo-700 transition-colors duration-300">Sign Up</button>
+                </div>
+                
+                <!-- Mode toggle link -->
+                <div class="text-center">
+                    <button type="button" id="auth-toggle" class="text-sm text-indigo-600 underline">Don't have an account? Sign up</button>
+                </div>
+                
+                <!-- Guest login option -->
+                <div class="text-center">
+                    <button type="button" id="anon-btn" class="text-sm text-gray-500 underline">Continue as Guest</button>
+                </div>
+            </form>
+            <div id="auth-message" class="mt-2 text-red-500 text-sm"></div>
+        </div>
+        <!-- Dashboard View -->
+        <div id="dashboard-view" class="hidden flex flex-col w-full max-w-4xl p-6 md:p-8 bg-white rounded-lg shadow-lg fade">
+            <header class="flex flex-col md:flex-row justify-between items-center mb-6 border-b pb-4">
+                <div class="flex items-center space-x-4">
+                    <div id="profile-avatar" class="w-12 h-12 bg-teal-200 rounded-full flex items-center justify-center font-bold text-xl text-teal-800">?</div>
+                    <div class="text-left">
+                        <h2 class="text-xl font-bold" id="profile-name">Welcome!</h2>
+                        <p class="text-sm text-gray-500" id="profile-role"></p>
+                    </div>
+                </div>
+                <nav class="mt-4 md:mt-0 space-x-2 sm:space-x-4">
+                    <button class="nav-btn px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-teal-600 rounded-full hover:bg-teal-100 transition-colors duration-200" data-page="dashboard">Dashboard</button>
+                    <button class="nav-btn px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-teal-600 rounded-full hover:bg-teal-100 transition-colors duration-200" data-page="profile">My Profile</button>
+                    <button class="nav-btn px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-teal-600 rounded-full hover:bg-teal-100 transition-colors duration-200" data-page="mentors">Mentors</button>
+                    <button class="nav-btn px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-teal-600 rounded-full hover:bg-teal-100 transition-colors duration-200" data-page="knowledge">Knowledge</button>
+                    <button class="nav-btn px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-teal-600 rounded-full hover:bg-teal-100 transition-colors duration-200" data-page="jobs">Jobs</button>
+                    <button id="sign-out-btn" class="px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-red-500 rounded-full hover:bg-red-100 transition-colors duration-200">Sign Out</button>
+                </nav>
+            </header>
+            <!-- Main Content Area -->
+            <div id="main-content-area" class="flex flex-col w-full">
+                <!-- Dashboard Page -->
+                <section id="dashboard-page" class="page-section">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        <!-- Mentorship Card -->
+                        <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Connect with a Mentor</h3>
+                            <p class="text-gray-600 text-sm mb-4">
+                                Find experienced practitioners who can guide your journey, or get instant advice from our AI mentor.
+                            </p>
+                            <button class="w-full py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors duration-200" onclick="showSection('mentors')">Find a Mentor</button>
+                        </div>
+                        <!-- Knowledge Hub Card -->
+                        <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Explore the Knowledge Hub</h3>
+                            <p class="text-gray-600 text-sm mb-4">
+                                Access journals, research, and case studies in one place.
+                            </p>
+                            <button class="w-full py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200" onclick="showSection('knowledge')">Search Research</button>
+                        </div>
+                        <!-- Career Services Card -->
+                        <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Career & Jobs</h3>
+                            <p class="text-gray-600 text-sm mb-4">
+                                Discover job openings and internship opportunities globally.
+                            </p>
+                            <button class="w-full py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600 transition-colors duration-200" onclick="showSection('jobs')">View Jobs</button>
+                        </div>
+                    </div>
+                    <!-- Real-Time Community Feed -->
+                    <section class="mt-8">
+                        <h3 class="text-xl font-bold mb-4">Community Feed</h3>
+                        <form id="post-form" class="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mb-4">
+                            <textarea id="post-content" class="flex-grow p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="What's on your mind?"></textarea>
+                            <button type="submit" class="px-6 py-3 bg-teal-600 text-white font-semibold rounded-md shadow-lg hover:bg-teal-700 transition-colors duration-300">Post</button>
+                        </form>
+                        <div id="post-error" class="text-red-500 text-sm mb-2 hidden"></div>
+                        <div id="feed-list" class="space-y-4"></div>
+                    </section>
+                </section>
+                <!-- Profile Page -->
+                <section id="profile-page" class="page-section hidden">
+                    <h3 class="text-xl font-bold mb-4">My Profile</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Profile Display -->
+                        <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
+                            <h4 class="text-lg font-semibold mb-4">Profile Information</h4>
+                            <div class="mb-4">
+                                <span class="font-semibold">Name:</span>
+                                <span id="profile-details-name"></span>
+                            </div>
+                            <div class="mb-4">
+                                <span class="font-semibold">Email:</span>
+                                <span id="profile-details-email"></span>
+                            </div>
+                            <div class="mb-4">
+                                <span class="font-semibold">Bio:</span>
+                                <p id="profile-details-bio" class="text-gray-700 mt-1"></p>
+                            </div>
+                            <div class="mb-4">
+                                <span class="font-semibold">User ID:</span>
+                                <span id="profile-details-id"></span>
+                            </div>
+                        </div>
+                        
+                        <!-- Profile Edit Form -->
+                        <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
+                            <h4 class="text-lg font-semibold mb-4">Edit Profile</h4>
+                            <form id="profile-form" class="space-y-4">
+                                <div>
+                                    <label for="profile-name-input" class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                                    <input type="text" id="profile-name-input" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Enter your name">
+                                </div>
+                                <div>
+                                    <label for="profile-bio-input" class="block text-sm font-medium text-gray-700 mb-2">Bio / Professional Summary</label>
+                                    <textarea id="profile-bio-input" rows="4" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Tell us about yourself, your experience with Ayurveda, or your professional background..."></textarea>
+                                </div>
+                                <button type="submit" class="w-full px-6 py-3 bg-teal-600 text-white font-semibold rounded-md shadow-lg hover:bg-teal-700 transition-colors duration-300">Update Profile</button>
+                            </form>
+                            <div id="profile-error" class="text-red-500 text-sm mt-2 hidden"></div>
+                            <div id="profile-success" class="text-green-500 text-sm mt-2 hidden"></div>
+                        </div>
+                    </div>
+                </section>
+                <!-- Mentors Page -->
+                <section id="mentors-page" class="page-section hidden">
+                    <h3 class="text-xl font-bold mb-4">Find Your Ayurveda Mentor</h3>
+                    <p class="text-gray-600 mb-6">Connect with experienced practitioners who can guide your journey in Ayurveda.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Mentor Profile 1 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-teal-200 rounded-full flex items-center justify-center font-bold text-xl text-teal-800 mr-3">
+                                    D
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-800">Dr. Priya Sharma</h4>
+                                    <p class="text-sm text-teal-600 font-medium">Ayurvedic Practitioner</p>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                With over 15 years of experience in classical Ayurveda, Dr. Sharma specializes in digestive health and herbal medicine. She holds a BAMS degree and has helped hundreds of patients achieve optimal wellness.
+                            </p>
+                            <button class="mentorship-btn w-full px-4 py-2 bg-teal-600 text-white font-semibold rounded-md hover:bg-teal-700 transition-colors duration-300" data-mentor="Dr. Priya Sharma">
+                                Request Mentorship
+                            </button>
+                        </div>
+                        
+                        <!-- Mentor Profile 2 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-indigo-200 rounded-full flex items-center justify-center font-bold text-xl text-indigo-800 mr-3">
+                                    A
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-800">Acharya Ravi Kumar</h4>
+                                    <p class="text-sm text-indigo-600 font-medium">Panchakarma Specialist</p>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Master practitioner of Panchakarma therapies with 20+ years of experience. Acharya Kumar has trained under renowned Ayurvedic physicians in Kerala and specializes in detoxification treatments.
+                            </p>
+                            <button class="mentorship-btn w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition-colors duration-300" data-mentor="Acharya Ravi Kumar">
+                                Request Mentorship
+                            </button>
+                        </div>
+                        
+                        <!-- Mentor Profile 3 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-pink-200 rounded-full flex items-center justify-center font-bold text-xl text-pink-800 mr-3">
+                                    S
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-800">Dr. Sarah Chen</h4>
+                                    <p class="text-sm text-pink-600 font-medium">Research Scholar</p>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                PhD in Ayurvedic Medicine and modern clinical research. Dr. Chen bridges traditional wisdom with contemporary science, focusing on evidence-based approaches to Ayurvedic treatments.
+                            </p>
+                            <button class="mentorship-btn w-full px-4 py-2 bg-pink-600 text-white font-semibold rounded-md hover:bg-pink-700 transition-colors duration-300" data-mentor="Dr. Sarah Chen">
+                                Request Mentorship
+                            </button>
+                        </div>
+                        
+                        <!-- Mentor Profile 4 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-green-200 rounded-full flex items-center justify-center font-bold text-xl text-green-800 mr-3">
+                                    V
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-800">Vaidya Meera Patel</h4>
+                                    <p class="text-sm text-green-600 font-medium">Yoga & Wellness Expert</p>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Integrative approach combining Ayurveda, Yoga, and meditation. Vaidya Patel has authored several books on holistic wellness and teaches at international Ayurveda conferences.
+                            </p>
+                            <button class="mentorship-btn w-full px-4 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors duration-300" data-mentor="Vaidya Meera Patel">
+                                Request Mentorship
+                            </button>
+                        </div>
+                        
+                        <!-- Mentor Profile 5 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center font-bold text-xl text-purple-800 mr-3">
+                                    K
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-800">Dr. Krishna Rao</h4>
+                                    <p class="text-sm text-purple-600 font-medium">Pulse Diagnosis Master</p>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Renowned for expertise in Nadi Pariksha (pulse diagnosis) and constitutional assessment. Dr. Rao has taught thousands of students the art of reading the pulse for health insights.
+                            </p>
+                            <button class="mentorship-btn w-full px-4 py-2 bg-purple-600 text-white font-semibold rounded-md hover:bg-purple-700 transition-colors duration-300" data-mentor="Dr. Krishna Rao">
+                                Request Mentorship
+                            </button>
+                        </div>
+                        
+                        <!-- Mentor Profile 6 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-blue-200 rounded-full flex items-center justify-center font-bold text-xl text-blue-800 mr-3">
+                                    L
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-800">Dr. Lisa Thompson</h4>
+                                    <p class="text-sm text-blue-600 font-medium">Herbal Medicine Specialist</p>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Western physician who studied Ayurveda in India for 8 years. Dr. Thompson specializes in herbal formulations and has pioneered integrative treatment protocols in clinical settings.
+                            </p>
+                            <button class="mentorship-btn w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors duration-300" data-mentor="Dr. Lisa Thompson">
+                                Request Mentorship
+                            </button>
+                        </div>
+                    </div>
+                </section>
+                <!-- Jobs Page -->
+                <section id="jobs-page" class="page-section hidden">
+                    <h3 class="text-xl font-bold mb-4">Ayurveda Career Opportunities</h3>
+                    <p class="text-gray-600 mb-6">Discover job openings and internship opportunities in the field of Ayurveda worldwide.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Job 1 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                            <div class="mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Ayurvedic Practitioner</h4>
+                                <p class="text-teal-600 font-medium text-sm">Wellness Institute of America</p>
+                                <p class="text-gray-500 text-sm">📍 California, USA</p>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Full-time position for qualified Ayurvedic practitioner. BAMS degree required. Experience with Panchakarma therapies preferred.
+                            </p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Full-time</span>
+                                <button class="px-4 py-2 bg-teal-600 text-white text-sm rounded hover:bg-teal-700 transition-colors">Apply Now</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Job 2 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                            <div class="mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Research Associate - Ayurveda</h4>
+                                <p class="text-indigo-600 font-medium text-sm">International Journal of Ayurveda</p>
+                                <p class="text-gray-500 text-sm">📍 London, UK</p>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Seeking researcher with PhD in Ayurvedic Medicine for clinical studies. Experience in evidence-based research essential.
+                            </p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Contract</span>
+                                <button class="px-4 py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition-colors">Apply Now</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Job 3 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                            <div class="mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Ayurveda Consultant</h4>
+                                <p class="text-green-600 font-medium text-sm">Holistic Health Center</p>
+                                <p class="text-gray-500 text-sm">📍 Mumbai, India</p>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Part-time consulting role for experienced Ayurvedic physician. Flexible hours, work with diverse clientele.
+                            </p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Part-time</span>
+                                <button class="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors">Apply Now</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Job 4 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                            <div class="mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Panchakarma Therapist</h4>
+                                <p class="text-purple-600 font-medium text-sm">Ayurveda Retreat Center</p>
+                                <p class="text-gray-500 text-sm">📍 Kerala, India</p>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Experienced therapist needed for luxury retreat center. Certification in Panchakarma treatments required.
+                            </p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Full-time</span>
+                                <button class="px-4 py-2 bg-purple-600 text-white text-sm rounded hover:bg-purple-700 transition-colors">Apply Now</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Job 5 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                            <div class="mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Ayurveda Content Writer</h4>
+                                <p class="text-pink-600 font-medium text-sm">Digital Health Platform</p>
+                                <p class="text-gray-500 text-sm">📍 Remote</p>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Create engaging content about Ayurvedic practices for online platform. Background in Ayurveda and strong writing skills required.
+                            </p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Remote</span>
+                                <button class="px-4 py-2 bg-pink-600 text-white text-sm rounded hover:bg-pink-700 transition-colors">Apply Now</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Job 6 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                            <div class="mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Ayurveda Intern</h4>
+                                <p class="text-blue-600 font-medium text-sm">Traditional Medicine College</p>
+                                <p class="text-gray-500 text-sm">📍 Toronto, Canada</p>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                6-month internship program for Ayurveda students. Hands-on experience with patient care and herbal medicine preparation.
+                            </p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Internship</span>
+                                <button class="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors">Apply Now</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Job 7 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                            <div class="mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Herb Quality Specialist</h4>
+                                <p class="text-orange-600 font-medium text-sm">Organic Herbs International</p>
+                                <p class="text-gray-500 text-sm">📍 Oregon, USA</p>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Ensure quality and authenticity of Ayurvedic herbs for international distribution. Knowledge of herb identification essential.
+                            </p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Full-time</span>
+                                <button class="px-4 py-2 bg-orange-600 text-white text-sm rounded hover:bg-orange-700 transition-colors">Apply Now</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Job 8 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                            <div class="mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Ayurveda Workshop Facilitator</h4>
+                                <p class="text-cyan-600 font-medium text-sm">Global Wellness Events</p>
+                                <p class="text-gray-500 text-sm">📍 Multiple Locations</p>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Lead workshops and seminars on Ayurvedic principles worldwide. Travel required, excellent communication skills needed.
+                            </p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Contract</span>
+                                <button class="px-4 py-2 bg-cyan-600 text-white text-sm rounded hover:bg-cyan-700 transition-colors">Apply Now</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Job 9 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                            <div class="mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Clinical Ayurveda Coordinator</h4>
+                                <p class="text-red-600 font-medium text-sm">Integrative Medicine Clinic</p>
+                                <p class="text-gray-500 text-sm">📍 Sydney, Australia</p>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4">
+                                Coordinate Ayurvedic treatments within integrative medical practice. Bridge traditional and modern healthcare approaches.
+                            </p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Full-time</span>
+                                <button class="px-4 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors">Apply Now</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <!-- Knowledge Hub Page -->
+                <section id="knowledge-page" class="page-section hidden">
+                    <h3 class="text-xl font-bold mb-4">Knowledge Hub</h3>
+                    <p class="text-gray-600 mb-6">Search for Ayurvedic topics and get AI-powered summaries with research sources.</p>
+                    
+                    <!-- Search Form -->
+                    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 mb-6">
+                        <form id="knowledge-search-form" class="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                            <input type="text" id="knowledge-search-input" class="flex-grow p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Search for Ayurvedic topics (e.g., 'turmeric benefits', 'dosha types', 'panchakarma')" required>
+                            <button type="submit" id="knowledge-search-btn" class="px-6 py-3 bg-teal-600 text-white font-semibold rounded-md shadow-lg hover:bg-teal-700 transition-colors duration-300">
+                                Search
+                            </button>
+                        </form>
+                        <div id="knowledge-error" class="text-red-500 text-sm mt-2 hidden"></div>
+                    </div>
+                    
+                    <!-- Search Results -->
+                    <div id="knowledge-results" class="hidden">
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">Search Results</h4>
+                            <div id="knowledge-summary" class="prose max-w-none mb-4">
+                                <!-- AI-generated summary will appear here -->
+                            </div>
+                            <div id="knowledge-sources" class="border-t pt-4">
+                                <h5 class="text-md font-semibold text-gray-700 mb-2">Sources</h5>
+                                <div id="knowledge-sources-list">
+                                    <!-- Source links will appear here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Loading State -->
+                    <div id="knowledge-loading" class="hidden">
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <div class="flex items-center justify-center">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mr-3"></div>
+                                <span class="text-gray-600">Searching and generating summary...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Example Searches -->
+                    <div class="mt-8">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Popular Topics</h4>
+                        <div class="flex flex-wrap gap-2">
+                            <button class="example-search px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors" data-query="turmeric health benefits">Turmeric Benefits</button>
+                            <button class="example-search px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors" data-query="ayurvedic body types doshas">Dosha Types</button>
+                            <button class="example-search px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors" data-query="panchakarma detoxification therapy">Panchakarma Therapy</button>
+                            <button class="example-search px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors" data-query="ayurvedic diet nutrition">Ayurvedic Diet</button>
+                            <button class="example-search px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors" data-query="meditation mindfulness ayurveda">Meditation & Ayurveda</button>
+                            <button class="example-search px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors" data-query="herbal medicine ayurveda">Herbal Medicine</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+        <!-- Custom Message Box -->
+        <div id="custom-message" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-red-100 text-red-700 px-4 py-2 rounded-lg shadow hidden"></div>
+    </div>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, addDoc, orderBy, limit, onSnapshot, getDoc, query } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
         
         // ---- Firebase Setup ----
-        // The following global variables are expected: __app_id, __firebase_config, __initial_auth_token
         
-        // This is your actual Firebase configuration
         let firebaseConfig = {
             apiKey: "AIzaSyCfeO_3v0DEhdu1ihGpNy8Kd5P97NH34Ts",
             authDomain: "ayurveda-connect.firebaseapp.com",
@@ -27,8 +517,6 @@
         };
         let appId = "ayurveda-connect";
 
-        // This section checks if the Canvas environment provides a config.
-        // If it does, we use that instead of the hardcoded one above.
         if (typeof __firebase_config !== 'undefined' && __firebase_config) {
             try {
                 firebaseConfig = JSON.parse(__firebase_config);
@@ -43,7 +531,6 @@
         const auth = getAuth(firebaseApp);
         const db = getFirestore(firebaseApp);
         
-        // UI Elements
         const authPage = document.getElementById('auth-page');
         const dashboardView = document.getElementById('dashboard-view');
         const signInBtn = document.getElementById('sign-in-btn');
@@ -58,33 +545,27 @@
         const customMessage = document.getElementById('custom-message');
         const authToggle = document.getElementById('auth-toggle');
         const authModeText = document.getElementById('auth-mode-text');
-        // Error message elements
         const usernameError = document.getElementById('username-error');
         const emailError = document.getElementById('email-error');
         const passwordError = document.getElementById('password-error');
         const navBtns = document.querySelectorAll('.nav-btn');
         const pageSections = document.querySelectorAll('.page-section');
-        // Profile
         const profileAvatar = document.getElementById('profile-avatar');
         const profileName = document.getElementById('profile-name');
         const profileRole = document.getElementById('profile-role');
-        // Profile Details
         const profileDetailsName = document.getElementById('profile-details-name');
         const profileDetailsEmail = document.getElementById('profile-details-email');
         const profileDetailsBio = document.getElementById('profile-details-bio');
         const profileDetailsId = document.getElementById('profile-details-id');
-        // Profile Form
         const profileForm = document.getElementById('profile-form');
         const profileNameInput = document.getElementById('profile-name-input');
         const profileBioInput = document.getElementById('profile-bio-input');
         const profileError = document.getElementById('profile-error');
         const profileSuccess = document.getElementById('profile-success');
-        // Feed
         const postForm = document.getElementById('post-form');
         const postContent = document.getElementById('post-content');
         const feedList = document.getElementById('feed-list');
         const postError = document.getElementById('post-error');
-        // Knowledge Hub
         const knowledgeSearchForm = document.getElementById('knowledge-search-form');
         const knowledgeSearchInput = document.getElementById('knowledge-search-input');
         const knowledgeSearchBtn = document.getElementById('knowledge-search-btn');
@@ -94,21 +575,18 @@
         const knowledgeSummary = document.getElementById('knowledge-summary');
         const knowledgeSourcesList = document.getElementById('knowledge-sources-list');
 
-        // ---- State ----
         let currentUser = null;
         let userProfile = null;
         let feedUnsub = null;
-        let pageState = 'dashboard'; // dashboard | profile | mentors | jobs | knowledge
-        let isSignUpMode = false; // Track whether we're in sign-up or sign-in mode
+        let pageState = 'dashboard';
+        let isSignUpMode = false;
 
-        // ---- Utility: Show custom message ----
         function showMessage(text, timeout=3000) {
             customMessage.innerText = text;
             customMessage.classList.remove('hidden');
             setTimeout(() => customMessage.classList.add('hidden'), timeout);
         }
 
-        // ---- Utility: Switch main section ----
         function showSection(section) {
             pageSections.forEach(sec => {
                 if (sec.id === section + '-page') {
@@ -120,38 +598,31 @@
             pageState = section;
         }
 
-        // ---- Nav Buttons ----
         navBtns.forEach(btn => btn.addEventListener('click', () => {
             showSection(btn.dataset.page);
         }));
 
-        // ---- Auth Form Mode Management ----
         function setAuthMode(signUpMode) {
             isSignUpMode = signUpMode;
             
             if (signUpMode) {
-                // Switch to sign-up mode
                 authName.style.display = 'block';
                 authModeText.innerText = 'Create your account';
                 authToggle.innerText = 'Already have an account? Sign in';
                 signInBtn.style.display = 'none';
                 signUpBtn.style.display = 'inline-block';
                 signUpBtn.innerText = 'Create Account';
-                // Clear any existing error messages
                 clearAllErrors();
             } else {
-                // Switch to sign-in mode
                 authName.style.display = 'none';
                 authModeText.innerText = 'Sign in to your account';
                 authToggle.innerText = "Don't have an account? Sign up";
                 signInBtn.style.display = 'inline-block';
                 signUpBtn.style.display = 'none';
-                // Clear any existing error messages
                 clearAllErrors();
             }
         }
 
-        // ---- Error Message Management ----
         function clearAllErrors() {
             authMessage.innerText = '';
             usernameError.style.display = 'none';
@@ -183,7 +654,6 @@
 
             clearAllErrors();
 
-            // Validate username (for sign-up only)
             if (!username) {
                 showFieldError('username', 'Username is required');
                 hasErrors = true;
@@ -192,7 +662,6 @@
                 hasErrors = true;
             }
 
-            // Validate email
             if (!email) {
                 showFieldError('email', 'Email is required');
                 hasErrors = true;
@@ -201,7 +670,6 @@
                 hasErrors = true;
             }
 
-            // Validate password
             if (!password) {
                 showFieldError('password', 'Password is required');
                 hasErrors = true;
@@ -220,13 +688,11 @@
 
             clearAllErrors();
 
-            // Validate email
             if (!email) {
                 showFieldError('email', 'Email is required');
                 hasErrors = true;
             }
 
-            // Validate password
             if (!password) {
                 showFieldError('password', 'Password is required');
                 hasErrors = true;
@@ -235,26 +701,21 @@
             return !hasErrors;
         }
 
-        // ---- Auth Mode Toggle ----
         authToggle.addEventListener('click', () => {
             setAuthMode(!isSignUpMode);
             authForm.reset();
         });
 
-        // ---- Reset Auth Form ----
         function resetAuthForm() {
-            setAuthMode(false); // Default to sign-in mode
+            setAuthMode(false);
             authForm.reset();
             clearAllErrors();
         }
 
-        // ---- Auth Actions ----
-        // Form submission handler
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             if (isSignUpMode) {
-                // Handle sign-up
                 if (!validateSignUpForm()) return;
                 
                 const email = authEmail.value.trim();
@@ -263,15 +724,12 @@
                 
                 clearAllErrors();
                 
-                // Disable form during submission
                 signUpBtn.disabled = true;
                 signUpBtn.innerText = 'Creating Account...';
                 
                 try {
-                    // Create user account with email and password
                     const cred = await createUserWithEmailAndPassword(auth, email, password);
                     
-                    // Create user profile in Firestore with username
                     await setDoc(doc(db, 'users', cred.user.uid), {
                         userId: cred.user.uid,
                         name: username,
@@ -294,12 +752,10 @@
                         authMessage.innerText = 'Failed to create account: ' + (err.message || 'Unknown error');
                     }
                 } finally {
-                    // Re-enable form
                     signUpBtn.disabled = false;
                     signUpBtn.innerText = 'Create Account';
                 }
             } else {
-                // Handle sign-in
                 if (!validateSignInForm()) return;
                 
                 const email = authEmail.value.trim();
@@ -307,7 +763,6 @@
                 
                 clearAllErrors();
                 
-                // Disable form during submission
                 signInBtn.disabled = true;
                 signInBtn.innerText = 'Signing In...';
                 
@@ -328,23 +783,19 @@
                         authMessage.innerText = 'Failed to sign in: ' + (err.message || 'Unknown error');
                     }
                 } finally {
-                    // Re-enable form
                     signInBtn.disabled = false;
                     signInBtn.innerText = 'Sign In';
                 }
             }
         });
 
-        // Sign Up button click handler (switches to sign-up mode)
         signUpBtn.addEventListener('click', () => {
             setAuthMode(true);
         });
 
-        // Anonymous/Guest sign in
         anonBtn.addEventListener('click', async () => {
             clearAllErrors();
             
-            // Show loading state
             anonBtn.disabled = true;
             anonBtn.innerText = 'Signing in as guest...';
             
@@ -383,12 +834,10 @@
             }
         });
 
-        // Sign Out
         signOutBtn.addEventListener('click', async () => {
             await signOut(auth);
         });
 
-        // ---- Auth State & UI Management ----
         function setAuthUI(isAuth) {
             if (isAuth) {
                 authPage.classList.add('hidden');
@@ -400,7 +849,6 @@
             }
         }
 
-        // ---- Get Profile ----
         async function getProfile(uid) {
             if (!uid) return null;
             
@@ -429,7 +877,6 @@
             }
         }
 
-        // ---- Render Profile ----
         function renderProfile(profile, firebaseUser) {
             const displayName = profile.name || "User";
             const isGuest = firebaseUser.isAnonymous || profile.isGuest;
@@ -455,7 +902,6 @@
             profileBioInput.value = profile.bio || "";
         }
 
-        // ---- Real-Time Feed ----
         let feedUnsub = null;
         function subscribeFeed() {
             if (feedUnsub) feedUnsub();
@@ -492,7 +938,6 @@
             );
         }
 
-        // ---- Profile Form ----
         profileForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             profileError.classList.add('hidden');
@@ -536,7 +981,6 @@
             }
         });
 
-        // ---- Mentorship Requests ----
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('mentorship-btn')) {
                 e.preventDefault();
@@ -559,7 +1003,6 @@
             }
         });
 
-        // ---- Knowledge Hub Search ----
         knowledgeSearchForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const query = knowledgeSearchInput.value.trim();
@@ -573,7 +1016,6 @@
             await performKnowledgeSearch(query);
         });
         
-        // Handle example search buttons
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('example-search')) {
                 const query = e.target.dataset.query;
