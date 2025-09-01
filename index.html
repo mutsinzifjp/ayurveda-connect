@@ -7,9 +7,31 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, addDoc, orderBy, limit, onSnapshot, getDoc, query } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
+        
+        // Make Firebase functions available globally
+        window.initializeApp = initializeApp;
+        window.getAuth = getAuth;
+        window.getFirestore = getFirestore;
+        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+        window.signInAnonymously = signInAnonymously;
+        window.signOut = signOut;
+        window.onAuthStateChanged = onAuthStateChanged;
+        window.signInWithCustomToken = signInWithCustomToken;
+        window.collection = collection;
+        window.doc = doc;
+        window.setDoc = setDoc;
+        window.addDoc = addDoc;
+        window.orderBy = orderBy;
+        window.limit = limit;
+        window.onSnapshot = onSnapshot;
+        window.getDoc = getDoc;
+        window.query = query;
+    </script>
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
@@ -503,130 +525,17 @@
     </div>
     <script>
     // ---- Firebase Setup ----
-    // The following global variables are expected: __app_id, __firebase_config, __initial_auth_token
-    // For local testing, you can define them in your browser console before loading the page.
-    
-    // Check if Firebase is available, if not create a mock for development
-    let useFirebaseMock = false;
-    
-    // Default test Firebase configuration for development
-    // Replace with your actual Firebase config in production
-    if (!window.__firebase_config) {
-        window.__firebase_config = {
-            apiKey: "demo-api-key",
-            authDomain: "demo-project.firebaseapp.com",
-            projectId: "demo-project",
-            storageBucket: "demo-project.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:abcdef123456"
-        };
-        window.__app_id = "ayurveda-connect-demo";
-        console.warn("Using demo Firebase configuration. Replace with your actual config in production.");
-    }
-    
-    // Firebase Mock for Development (when Firebase CDN is not available)
-    if (typeof firebase === 'undefined') {
-        console.warn("Firebase CDN not available. Using mock implementation for development.");
-        useFirebaseMock = true;
-        
-        // Create a simple mock Firebase object for development
-        window.firebase = {
-            initializeApp: (config, appId) => {
-                console.log("Mock Firebase app initialized with config:", config);
-                return { name: appId || 'default' };
-            },
-            auth: (app) => ({
-                currentUser: null,
-                signInWithEmailAndPassword: async (email, password) => {
-                    console.log("Mock sign-in:", email);
-                    const mockUser = {
-                        uid: 'mock-user-' + Date.now(),
-                        email: email,
-                        isAnonymous: false
-                    };
-                    setTimeout(() => {
-                        if (window.mockAuthStateChanged) {
-                            window.mockAuthStateChanged(mockUser);
-                        }
-                    }, 100);
-                    return { user: mockUser };
-                },
-                createUserWithEmailAndPassword: async (email, password) => {
-                    console.log("Mock sign-up:", email);
-                    const mockUser = {
-                        uid: 'mock-user-' + Date.now(),
-                        email: email,
-                        isAnonymous: false
-                    };
-                    setTimeout(() => {
-                        if (window.mockAuthStateChanged) {
-                            window.mockAuthStateChanged(mockUser);
-                        }
-                    }, 100);
-                    return { user: mockUser };
-                },
-                signInAnonymously: async () => {
-                    console.log("Mock anonymous sign-in");
-                    const mockUser = {
-                        uid: 'mock-guest-' + Date.now(),
-                        email: null,
-                        isAnonymous: true
-                    };
-                    setTimeout(() => {
-                        if (window.mockAuthStateChanged) {
-                            window.mockAuthStateChanged(mockUser);
-                        }
-                    }, 100);
-                    return { user: mockUser };
-                },
-                signOut: async () => {
-                    console.log("Mock sign-out");
-                    setTimeout(() => {
-                        if (window.mockAuthStateChanged) {
-                            window.mockAuthStateChanged(null);
-                        }
-                    }, 100);
-                },
-                onAuthStateChanged: (callback) => {
-                    window.mockAuthStateChanged = callback;
-                    console.log("Mock auth state listener registered");
-                    return () => console.log("Mock auth state listener unsubscribed");
-                },
-                signInWithCustomToken: async (token) => {
-                    console.log("Mock custom token sign-in:", token);
-                    return { user: { uid: 'mock-token-user', email: 'token@example.com', isAnonymous: false } };
-                }
-            }),
-            firestore: (app) => ({
-                collection: (name) => ({
-                    doc: (id) => ({
-                        get: async () => ({
-                            exists: false,
-                            data: () => null
-                        }),
-                        set: async (data, options) => {
-                            console.log("Mock Firestore set:", name, id, data);
-                            return Promise.resolve();
-                        }
-                    }),
-                    add: async (data) => {
-                        console.log("Mock Firestore add:", name, data);
-                        return Promise.resolve({ id: 'mock-doc-' + Date.now() });
-                    },
-                    orderBy: () => ({
-                        limit: () => ({
-                            onSnapshot: (callback, errorCallback) => {
-                                console.log("Mock Firestore subscription:", name);
-                                // Return empty snapshot
-                                callback([]);
-                                return () => console.log("Mock subscription unsubscribed");
-                            }
-                        })
-                    })
-                })
-            })
-        };
-    }
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyCfeO_3v0DEhdu1ihGpNy8Kd5P97NH34Ts",
+        authDomain: "ayurveda-connect.firebaseapp.com",
+        projectId: "ayurveda-connect",
+        storageBucket: "ayurveda-connect.firebasestorage.app",
+        messagingSenderId: "521268075102",
+        appId: "1:521268075102:web:ba723ff0288e6db493f2cf",
+        measurementId: "G-9GVR0STXJB"
+    };
+
     let firebaseApp, auth, db;
     // UI Elements
     const authPage = document.getElementById('auth-page');
@@ -861,16 +770,16 @@
             signUpBtn.innerText = 'Creating Account...';
             
             try {
-                // Additional check to ensure auth object has the required method
-                if (!auth || typeof auth.createUserWithEmailAndPassword !== 'function') {
-                    throw new Error('Authentication service method not available');
+                // Additional check to ensure auth object exists
+                if (!auth) {
+                    throw new Error('Authentication service not available');
                 }
                 
                 // Create user account with email and password
-                const cred = await auth.createUserWithEmailAndPassword(email, password);
+                const cred = await window.createUserWithEmailAndPassword(auth, email, password);
                 
                 // Create user profile in Firestore with username
-                await db.collection('users').doc(cred.user.uid).set({
+                await window.setDoc(window.doc(db, 'users', cred.user.uid), {
                     userId: cred.user.uid,
                     name: username,
                     email: email,
@@ -913,12 +822,12 @@
             signInBtn.innerText = 'Signing In...';
             
             try {
-                // Additional check to ensure auth object has the required method
-                if (!auth || typeof auth.signInWithEmailAndPassword !== 'function') {
-                    throw new Error('Authentication service method not available');
+                // Additional check to ensure auth object exists
+                if (!auth) {
+                    throw new Error('Authentication service not available');
                 }
                 
-                await auth.signInWithEmailAndPassword(email, password);
+                await window.signInWithEmailAndPassword(auth, email, password);
                 showMessage("Welcome back!");
             } catch (err) {
                 console.error('Sign-in error:', err);
@@ -960,10 +869,10 @@
             return;
         }
         
-        // Additional check to ensure auth object has the signInAnonymously method
-        if (!auth || typeof auth.signInAnonymously !== 'function') {
+        // Additional check to ensure auth object exists
+        if (!auth) {
             authMessage.innerText = 'Authentication service is not available. Please refresh the page and try again.';
-            console.error('Auth object is missing or signInAnonymously method is not available:', auth);
+            console.error('Auth object is missing:', auth);
             return;
         }
         
@@ -973,7 +882,7 @@
         
         try {
             // Sign in anonymously
-            const result = await auth.signInAnonymously();
+            const result = await window.signInAnonymously(auth);
             
             // Validate the result before proceeding
             if (!result || !result.user || !result.user.uid) {
@@ -989,7 +898,7 @@
                 isGuest: true
             };
             
-            await db.collection('users').doc(result.user.uid).set(guestProfile);
+            await window.setDoc(window.doc(db, 'users', result.user.uid), guestProfile);
             
             // Show success message
             showMessage("Welcome! You're now browsing as a guest. You can view content and participate in discussions.");
@@ -1012,28 +921,18 @@
 
     // Sign Out
     signOutBtn.addEventListener('click', async () => {
-        await auth.signOut();
+        await window.signOut(auth);
     });
 
     // ---- Firebase Initialization ----
     function initializeFirebase() {
         try {
-            if (window.__firebase_config && firebase) {
-                firebaseApp = firebase.initializeApp(window.__firebase_config, window.__app_id || undefined);
-                auth = firebase.auth(firebaseApp);
-                db = firebase.firestore(firebaseApp);
-                
-                if (useFirebaseMock) {
-                    console.log("Firebase mock initialized successfully");
-                } else {
-                    console.log("Firebase initialized successfully");
-                }
-                return true;
-            } else {
-                console.error("Firebase config or Firebase library not found");
-                showMessage("Firebase configuration is missing. Please check your setup.");
-                return false;
-            }
+            firebaseApp = window.initializeApp(firebaseConfig);
+            auth = window.getAuth(firebaseApp);
+            db = window.getFirestore(firebaseApp);
+            
+            console.log("Firebase initialized successfully");
+            return true;
         } catch (error) {
             console.error("Firebase initialization failed:", error);
             showMessage("Failed to initialize Firebase: " + error.message);
@@ -1045,11 +944,7 @@
     function isFirebaseReady() {
         return auth && 
                db && 
-               firebaseApp && 
-               typeof auth.signInAnonymously === 'function' &&
-               typeof auth.signInWithEmailAndPassword === 'function' &&
-               typeof auth.createUserWithEmailAndPassword === 'function' &&
-               typeof db.collection === 'function';
+               firebaseApp;
     }
 
     // ---- Auth State & UI Management ----
@@ -1069,8 +964,8 @@
         if (!uid || !isFirebaseReady()) return null;
         
         try {
-            const userDoc = await db.collection('users').doc(uid).get();
-            if (userDoc.exists) {
+            const userDoc = await window.getDoc(window.doc(db, 'users', uid));
+            if (userDoc.exists()) {
                 return userDoc.data();
             }
             
@@ -1083,7 +978,7 @@
                     createdAt: new Date(),
                     isGuest: true
                 };
-                await db.collection('users').doc(uid).set(guestProfile);
+                await window.setDoc(window.doc(db, 'users', uid), guestProfile);
                 return guestProfile;
             }
             
@@ -1133,8 +1028,13 @@
         }
         
         if (feedUnsub) feedUnsub();
-        feedUnsub = db.collection('posts').orderBy('timestamp', 'desc').limit(50)
-            .onSnapshot(snapshot => {
+        feedUnsub = window.onSnapshot(
+            window.query(
+                window.collection(db, 'posts'), 
+                window.orderBy('timestamp', 'desc'), 
+                window.limit(50)
+            ),
+            snapshot => {
                 if (feedList) {
                     feedList.innerHTML = '';
                     snapshot.forEach(doc => {
@@ -1190,7 +1090,7 @@
                 updatedAt: new Date()
             };
             
-            await db.collection('users').doc(currentUser.uid).set(updatedProfile, { merge: true });
+            await window.setDoc(window.doc(db, 'users', currentUser.uid), updatedProfile, { merge: true });
             
             // Update local profile state
             userProfile = updatedProfile;
@@ -1424,7 +1324,7 @@
             return;
         }
         try {
-            await db.collection('posts').add({
+            await window.addDoc(window.collection(db, 'posts'), {
                 userId: currentUser.uid,
                 userName: userProfile?.name || "Anonymous",
                 content,
@@ -1468,7 +1368,7 @@
         
         // Token-based sign-in if available
         if (window.__initial_auth_token && auth) {
-            auth.signInWithCustomToken(window.__initial_auth_token)
+            window.signInWithCustomToken(auth, window.__initial_auth_token)
                 .catch(err => {
                     console.error('Token sign-in failed:', err);
                     showMessage("Automatic sign-in failed. Please sign in manually.");
@@ -1477,7 +1377,7 @@
         
         // Auth state observer - handles automatic UI updates when user signs in/out
         if (auth) {
-            auth.onAuthStateChanged(async (user) => {
+            window.onAuthStateChanged(auth, async (user) => {
                 currentUser = user;
                 setAuthUI(!!user);
                 
