@@ -503,8 +503,6 @@
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, addDoc, orderBy, limit, onSnapshot, getDoc, query } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
         
-        // ---- Firebase Setup ----
-        
         let firebaseConfig = {
             apiKey: "AIzaSyCfeO_3v0DEhdu1ihGpNy8Kd5P97NH34Ts",
             authDomain: "ayurveda-connect.firebaseapp.com",
@@ -530,672 +528,6 @@
         const auth = getAuth(firebaseApp);
         const db = getFirestore(firebaseApp);
         
-        const authPage = document.getElementById('auth-page');
-        const dashboardView = document.getElementById('dashboard-view');
-        const signInBtn = document.getElementById('sign-in-btn');
-        const signUpBtn = document.getElementById('sign-up-btn');
-        const anonBtn = document.getElementById('anon-btn');
-        const signOutBtn = document.getElementById('sign-out-btn');
-        const authForm = document.getElementById('auth-form');
-        const authEmail = document.getElementById('auth-email');
-        const authPassword = document.getElementById('auth-password');
-        const authName = document.getElementById('auth-name');
-        const authMessage = document.getElementById('auth-message');
-        const customMessage = document.getElementById('custom-message');
-        const authToggle = document.getElementById('auth-toggle');
-        const authModeText = document.getElementById('auth-mode-text');
-        const usernameError = document.getElementById('username-error');
-        const emailError = document.getElementById('email-error');
-        const passwordError = document.getElementById('password-error');
-        const navBtns = document.querySelectorAll('.nav-btn');
-        const pageSections = document.querySelectorAll('.page-section');
-        const profileAvatar = document.getElementById('profile-avatar');
-        const profileName = document.getElementById('profile-name');
-        const profileRole = document.getElementById('profile-role');
-        const profileDetailsName = document.getElementById('profile-details-name');
-        const profileDetailsEmail = document.getElementById('profile-details-email');
-        const profileDetailsBio = document.getElementById('profile-details-bio');
-        const profileDetailsId = document.getElementById('profile-details-id');
-        const profileForm = document.getElementById('profile-form');
-        const profileNameInput = document.getElementById('profile-name-input');
-        const profileBioInput = document.getElementById('profile-bio-input');
-        const profileError = document.getElementById('profile-error');
-        const profileSuccess = document.getElementById('profile-success');
-        const postForm = document.getElementById('post-form');
-        const postContent = document.getElementById('post-content');
-        const feedList = document.getElementById('feed-list');
-        const postError = document.getElementById('post-error');
-        const knowledgeSearchForm = document.getElementById('knowledge-search-form');
-        const knowledgeSearchInput = document.getElementById('knowledge-search-input');
-        const knowledgeSearchBtn = document.getElementById('knowledge-search-btn');
-        const knowledgeError = document.getElementById('knowledge-error');
-        const knowledgeResults = document.getElementById('knowledge-results');
-        const knowledgeLoading = document.getElementById('knowledge-loading');
-        const knowledgeSummary = document.getElementById('knowledge-summary');
-        const knowledgeSourcesList = document.getElementById('knowledge-sources-list');
-
-        let currentUser = null;
-        let userProfile = null;
-        let feedUnsub = null;
-        let pageState = 'dashboard';
-        let isSignUpMode = false;
-
-        function showMessage(text, timeout=3000) {
-            customMessage.innerText = text;
-            customMessage.classList.remove('hidden');
-            setTimeout(() => customMessage.classList.add('hidden'), timeout);
-        }
-
-        function showSection(section) {
-            pageSections.forEach(sec => {
-                if (sec.id === section + '-page') {
-                    sec.classList.remove('hidden');
-                } else {
-                    sec.classList.add('hidden');
-                }
-            });
-            pageState = section;
-        }
-
-        navBtns.forEach(btn => btn.addEventListener('click', () => {
-            showSection(btn.dataset.page);
-        }));
-
-        function setAuthMode(signUpMode) {
-            isSignUpMode = signUpMode;
-            
-            if (signUpMode) {
-                authName.style.display = 'block';
-                authModeText.innerText = 'Create your account';
-                authToggle.innerText = 'Already have an account? Sign in';
-                signInBtn.style.display = 'none';
-                signUpBtn.style.display = 'inline-block';
-                signUpBtn.innerText = 'Create Account';
-                clearAllErrors();
-            } else {
-                authName.style.display = 'none';
-                authModeText.innerText = 'Sign in to your account';
-                authToggle.innerText = "Don't have an account? Sign up";
-                signInBtn.style.display = 'inline-block';
-                signUpBtn.style.display = 'none';
-                clearAllErrors();
-            }
-        }
-
-        function clearAllErrors() {
-            authMessage.innerText = '';
-            usernameError.style.display = 'none';
-            emailError.style.display = 'none';
-            passwordError.style.display = 'none';
-            usernameError.innerText = '';
-            emailError.innerText = '';
-            passwordError.innerText = '';
-        }
-
-        function showFieldError(field, message) {
-            if (field === 'username') {
-                usernameError.innerText = message;
-                usernameError.style.display = 'block';
-            } else if (field === 'email') {
-                emailError.innerText = message;
-                emailError.style.display = 'block';
-            } else if (field === 'password') {
-                passwordError.innerText = message;
-                passwordError.style.display = 'block';
-            }
-        }
-
-        function validateSignUpForm() {
-            const email = authEmail.value.trim();
-            const password = authPassword.value;
-            const username = authName.value.trim();
-            let hasErrors = false;
-
-            clearAllErrors();
-
-            if (!username) {
-                showFieldError('username', 'Username is required');
-                hasErrors = true;
-            } else if (username.length < 2) {
-                showFieldError('username', 'Username must be at least 2 characters');
-                hasErrors = true;
-            }
-
-            if (!email) {
-                showFieldError('email', 'Email is required');
-                hasErrors = true;
-            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                showFieldError('email', 'Please enter a valid email address');
-                hasErrors = true;
-            }
-
-            if (!password) {
-                showFieldError('password', 'Password is required');
-                hasErrors = true;
-            } else if (password.length < 6) {
-                showFieldError('password', 'Password must be at least 6 characters');
-                hasErrors = true;
-            }
-
-            return !hasErrors;
-        }
-
-        function validateSignInForm() {
-            const email = authEmail.value.trim();
-            const password = authPassword.value;
-            let hasErrors = false;
-
-            clearAllErrors();
-
-            if (!email) {
-                showFieldError('email', 'Email is required');
-                hasErrors = true;
-            }
-
-            if (!password) {
-                showFieldError('password', 'Password is required');
-                hasErrors = true;
-            }
-
-            return !hasErrors;
-        }
-
-        authToggle.addEventListener('click', () => {
-            setAuthMode(!isSignUpMode);
-            authForm.reset();
-        });
-
-        function resetAuthForm() {
-            setAuthMode(false);
-            authForm.reset();
-            clearAllErrors();
-        }
-
-        authForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            if (isSignUpMode) {
-                if (!validateSignUpForm()) return;
-                
-                const email = authEmail.value.trim();
-                const password = authPassword.value;
-                const username = authName.value.trim();
-                
-                clearAllErrors();
-                
-                signUpBtn.disabled = true;
-                signUpBtn.innerText = 'Creating Account...';
-                
-                try {
-                    const cred = await createUserWithEmailAndPassword(auth, email, password);
-                    
-                    await setDoc(doc(db, 'users', cred.user.uid), {
-                        userId: cred.user.uid,
-                        name: username,
-                        email: email,
-                        createdAt: new Date(),
-                        isGuest: false
-                    });
-                    
-                    showMessage("Account created successfully! Welcome to Ayurveda Connect.");
-                    resetAuthForm();
-                } catch (err) {
-                    console.error('Sign-up error:', err);
-                    if (err.code === 'auth/email-already-in-use') {
-                        showFieldError('email', 'This email is already registered. Try signing in instead.');
-                    } else if (err.code === 'auth/weak-password') {
-                        showFieldError('password', 'Password is too weak. Please choose a stronger password.');
-                    } else if (err.code === 'auth/invalid-email') {
-                        showFieldError('email', 'Invalid email address format.');
-                    } else {
-                        authMessage.innerText = 'Failed to create account: ' + (err.message || 'Unknown error');
-                    }
-                } finally {
-                    signUpBtn.disabled = false;
-                    signUpBtn.innerText = 'Create Account';
-                }
-            } else {
-                if (!validateSignInForm()) return;
-                
-                const email = authEmail.value.trim();
-                const password = authPassword.value;
-                
-                clearAllErrors();
-                
-                signInBtn.disabled = true;
-                signInBtn.innerText = 'Signing In...';
-                
-                try {
-                    await signInWithEmailAndPassword(auth, email, password);
-                    showMessage("Welcome back!");
-                } catch (err) {
-                    console.error('Sign-in error:', err);
-                    if (err.code === 'auth/user-not-found') {
-                        showFieldError('email', 'No account found with this email. Try signing up instead.');
-                    } else if (err.code === 'auth/wrong-password') {
-                        showFieldError('password', 'Incorrect password. Please try again.');
-                    } else if (err.code === 'auth/invalid-email') {
-                        showFieldError('email', 'Invalid email address format.');
-                    } else if (err.code === 'auth/too-many-requests') {
-                        authMessage.innerText = 'Too many failed attempts. Please try again later.';
-                    } else {
-                        authMessage.innerText = 'Failed to sign in: ' + (err.message || 'Unknown error');
-                    }
-                } finally {
-                    signInBtn.disabled = false;
-                    signInBtn.innerText = 'Sign In';
-                }
-            }
-        });
-
-        signUpBtn.addEventListener('click', () => {
-            setAuthMode(true);
-        });
-
-        anonBtn.addEventListener('click', async () => {
-            clearAllErrors();
-            
-            anonBtn.disabled = true;
-            anonBtn.innerText = 'Signing in as guest...';
-            
-            try {
-                const result = await signInAnonymously(auth);
-                
-                if (!result || !result.user || !result.user.uid) {
-                    throw new Error('Invalid authentication result received');
-                }
-                
-                const guestProfile = {
-                    userId: result.user.uid,
-                    name: "Guest User",
-                    email: "",
-                    createdAt: new Date(),
-                    isGuest: true
-                };
-                
-                await setDoc(doc(db, 'users', result.user.uid), guestProfile);
-                
-                showMessage("Welcome! You're now browsing as a guest. You can view content and participate in discussions.");
-            } catch (err) {
-                console.error('Anonymous sign-in error:', err);
-                if (err.code === 'auth/operation-not-allowed') {
-                    authMessage.innerText = 'Guest sign-in is not enabled. Please contact support or try creating an account.';
-                } else if (err.code === 'auth/configuration-not-found') {
-                    authMessage.innerText = 'Authentication service configuration error. Anonymous sign-in is not properly configured. Please contact support or try creating an account instead.';
-                } else if (err.message && err.message.includes('signInAnonymously')) {
-                    authMessage.innerText = 'Authentication service error. Please refresh the page and try again.';
-                } else {
-                    authMessage.innerText = 'Failed to sign in as guest: ' + (err.message || 'Unknown error');
-                }
-            } finally {
-                anonBtn.disabled = false;
-                anonBtn.innerText = 'Continue as Guest';
-            }
-        });
-
-        signOutBtn.addEventListener('click', async () => {
-            await signOut(auth);
-        });
-
-        function setAuthUI(isAuth) {
-            if (isAuth) {
-                authPage.classList.add('hidden');
-                dashboardView.classList.remove('hidden');
-            } else {
-                dashboardView.classList.add('hidden');
-                authPage.classList.remove('hidden');
-                resetAuthForm();
-            }
-        }
-
-        async function getProfile(uid) {
-            if (!uid) return null;
-            
-            try {
-                const userDoc = await getDoc(doc(db, 'users', uid));
-                if (userDoc.exists()) {
-                    return userDoc.data();
-                }
-                
-                if (auth.currentUser && auth.currentUser.isAnonymous) {
-                    const guestProfile = {
-                        userId: uid,
-                        name: "Guest User",
-                        email: "",
-                        createdAt: new Date(),
-                        isGuest: true
-                    };
-                    await setDoc(doc(db, 'users', uid), guestProfile);
-                    return guestProfile;
-                }
-                
-                return null;
-            } catch (err) {
-                console.error('Error getting profile:', err);
-                return null;
-            }
-        }
-
-        function renderProfile(profile, firebaseUser) {
-            const displayName = profile.name || "User";
-            const isGuest = firebaseUser.isAnonymous || profile.isGuest;
-            
-            profileAvatar.innerText = displayName[0].toUpperCase();
-            
-            if (isGuest) {
-                profileName.innerText = `Welcome, ${displayName}!`;
-                profileRole.innerText = "Guest User - Limited access";
-                profileAvatar.className = "w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center font-bold text-xl text-gray-700";
-            } else {
-                profileName.innerText = `Welcome, ${displayName}!`;
-                profileRole.innerText = profile.email || "Registered User";
-                profileAvatar.className = "w-12 h-12 bg-teal-200 rounded-full flex items-center justify-center font-bold text-xl text-teal-800";
-            }
-            
-            profileDetailsName.innerText = profile.name || "Not set";
-            profileDetailsEmail.innerText = isGuest ? "(Guest - no email)" : (profile.email || "Not set");
-            profileDetailsBio.innerText = profile.bio || "No bio provided yet.";
-            profileDetailsId.innerText = profile.userId || firebaseUser.uid || "Unknown";
-            
-            profileNameInput.value = profile.name || "";
-            profileBioInput.value = profile.bio || "";
-        }
-
-        let feedUnsub = null;
-        function subscribeFeed() {
-            if (feedUnsub) feedUnsub();
-            feedUnsub = onSnapshot(
-                query(
-                    collection(db, 'posts'), 
-                    orderBy('timestamp', 'desc'), 
-                    limit(50)
-                ),
-                snapshot => {
-                    if (feedList) {
-                        feedList.innerHTML = '';
-                        snapshot.forEach(doc => {
-                            const post = doc.data();
-                            const el = document.createElement('div');
-                            el.className = "bg-white p-4 rounded-lg shadow-md border border-gray-200";
-                            el.innerHTML = `
-                                <div class="flex items-center mb-2">
-                                    <div class="w-8 h-8 bg-gray-300 rounded-full mr-2 flex items-center justify-center font-bold text-gray-800 text-sm">
-                                        ${post.userName ? post.userName[0].toUpperCase() : "?"}
-                                    </div>
-                                    <span class="font-semibold text-gray-800">${post.userName || "Anonymous"}</span>
-                                    <span class="ml-2 text-xs text-gray-400">${post.timestamp ? formatTime(post.timestamp) : ""}</span>
-                                </div>
-                                <p class="text-gray-700 text-sm">${escapeHTML(post.content)}</p>
-                            `;
-                            feedList.appendChild(el);
-                        });
-                    }
-                }, err => {
-                    console.error('Feed subscription error:', err);
-                    showMessage("Error loading feed: " + err.message);
-                }
-            );
-        }
-
-        profileForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            profileError.classList.add('hidden');
-            profileSuccess.classList.add('hidden');
-            
-            const name = profileNameInput.value.trim();
-            const bio = profileBioInput.value.trim();
-            
-            if (!name) {
-                profileError.innerText = "Name is required.";
-                profileError.classList.remove('hidden');
-                return;
-            }
-            
-            if (!currentUser) {
-                profileError.innerText = "You must be signed in to update your profile.";
-                profileError.classList.remove('hidden');
-                return;
-            }
-            
-            try {
-                const updatedProfile = {
-                    ...userProfile,
-                    name: name,
-                    bio: bio,
-                    updatedAt: new Date()
-                };
-                
-                await setDoc(doc(db, 'users', currentUser.uid), updatedProfile, { merge: true });
-                
-                userProfile = updatedProfile;
-                renderProfile(userProfile, currentUser);
-                
-                profileSuccess.innerText = "Profile updated successfully!";
-                profileSuccess.classList.remove('hidden');
-                
-                showMessage("Profile updated successfully!");
-            } catch (err) {
-                profileError.innerText = "Error updating profile: " + err.message;
-                profileError.classList.remove('hidden');
-            }
-        });
-
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('mentorship-btn')) {
-                e.preventDefault();
-                const mentorName = e.target.dataset.mentor;
-                
-                if (!currentUser) {
-                    showMessage("Please sign in to request mentorship.", 4000);
-                    return;
-                }
-                
-                const originalText = e.target.innerText;
-                e.target.disabled = true;
-                e.target.innerText = 'Sending Request...';
-                
-                setTimeout(() => {
-                    e.target.disabled = false;
-                    e.target.innerText = originalText;
-                    showMessage(`Mentorship request sent to ${mentorName}! They will contact you soon.`, 5000);
-                }, 1500);
-            }
-        });
-
-        knowledgeSearchForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const query = knowledgeSearchInput.value.trim();
-            
-            if (!query) {
-                knowledgeError.innerText = "Please enter a search query.";
-                knowledgeError.classList.remove('hidden');
-                return;
-            }
-            
-            await performKnowledgeSearch(query);
-        });
-        
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('example-search')) {
-                const query = e.target.dataset.query;
-                knowledgeSearchInput.value = query;
-                performKnowledgeSearch(query);
-            }
-        });
-        
-        async function performKnowledgeSearch(query) {
-            knowledgeError.classList.add('hidden');
-            knowledgeResults.classList.add('hidden');
-            knowledgeLoading.classList.remove('hidden');
-            
-            const originalBtnText = knowledgeSearchBtn.innerText;
-            knowledgeSearchBtn.disabled = true;
-            knowledgeSearchBtn.innerText = 'Searching...';
-            
-            try {
-                await simulateGeminiSearch(query);
-            } catch (error) {
-                knowledgeLoading.classList.add('hidden');
-                knowledgeError.innerText = "Error performing search: " + error.message;
-                knowledgeError.classList.remove('hidden');
-            } finally {
-                knowledgeSearchBtn.disabled = false;
-                knowledgeSearchBtn.innerText = originalBtnText;
-            }
-        }
-        
-        async function simulateGeminiSearch(query) {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            let summary, sources;
-            
-            if (query.toLowerCase().includes('turmeric')) {
-                summary = `
-                    <h5 class="font-semibold text-gray-800 mb-2">Turmeric (Curcuma longa) in Ayurveda</h5>
-                    <p class="text-gray-700 mb-3">
-                        Turmeric, known as "Haridra" in Sanskrit, is one of the most revered herbs in Ayurvedic medicine. 
-                        It is classified as having a bitter and pungent taste (tikta-katu rasa) with heating potency (ushna virya).
-                    </p>
-                    <p class="text-gray-700 mb-3">
-                        <strong>Key Benefits:</strong> Anti-inflammatory properties, digestive support, blood purification, 
-                        skin health enhancement, and immune system strengthening. The active compound curcumin has been 
-                        extensively studied for its therapeutic effects.
-                    </p>
-                    <p class="text-gray-700">
-                        <strong>Traditional Uses:</strong> Treatment of wounds, respiratory conditions, digestive disorders, 
-                        and as a general tonic for overall health and vitality.
-                    </p>
-                `;
-                sources = [
-                    { title: "Curcumin: A Review of Its Effects on Human Health", url: "#", domain: "pubmed.ncbi.nlm.nih.gov" },
-                    { title: "Ayurvedic Properties of Turmeric", url: "#", domain: "ayurvedajournal.com" },
-                    { title: "Traditional Uses of Curcuma longa", url: "#", domain: "ethnobotany.org" }
-                ];
-            } else if (query.toLowerCase().includes('dosha')) {
-                summary = `
-                    <h5 class="font-semibold text-gray-800 mb-2">The Three Doshas: Constitutional Types in Ayurveda</h5>
-                    <p class="text-gray-700 mb-3">
-                        The doshas are fundamental energetic principles that govern physiological and psychological functions. 
-                        Each person has a unique combination of these three doshas that determines their constitution (prakriti).
-                    </p>
-                    <p class="text-gray-700 mb-3">
-                        <strong>Vata:</strong> Governs movement, nervous system, and circulation. Associated with air and space elements.
-                        <br><strong>Pitta:</strong> Controls metabolism, digestion, and transformation. Associated with fire and water elements.
-                        <br><strong>Kapha:</strong> Provides structure, immunity, and lubrication. Associated with earth and water elements.
-                    </p>
-                    <p class="text-gray-700">
-                        Understanding your dominant dosha helps in choosing appropriate lifestyle, diet, and therapeutic practices 
-                        for optimal health and balance.
-                    </p>
-                `;
-                sources = [
-                    { title: "Constitutional Assessment in Ayurveda", url: "#", domain: "ayurvedic-research.com" },
-                    { title: "The Science of Tridosha", url: "#", domain: "jams.in" },
-                    { title: "Dosha Theory and Modern Applications", url: "#", domain: "integrativemedicine.org" }
-                ];
-            } else if (query.toLowerCase().includes('panchakarma')) {
-                summary = `
-                    <h5 class="font-semibold text-gray-800 mb-2">Panchakarma: The Five-Fold Detoxification Therapy</h5>
-                    <p class="text-gray-700 mb-3">
-                        Panchakarma is Ayurveda's premier detoxification and rejuvenation program. It consists of five primary 
-                        procedures designed to eliminate toxins (ama) and restore natural balance to the body and mind.
-                    </p>
-                    <p class="text-gray-700 mb-3">
-                        <strong>The Five Procedures:</strong> Vamana (therapeutic vomiting), Virechana (purgation), 
-                        Nasya (nasal administration), Basti (medicated enemas), and Raktamokshana (bloodletting).
-                    </p>
-                    <p class="text-gray-700">
-                        <strong>Benefits:</strong> Deep cellular detoxification, improved immunity, enhanced mental clarity, 
-                        and prevention of disease. The treatment is preceded by preparatory therapies and followed by 
-                        rejuvenation protocols.
-                    </p>
-                `;
-                sources = [
-                    { title: "Clinical Efficacy of Panchakarma Therapy", url: "#", domain: "ayurvedajournal.org" },
-                    { title: "Panchakarma: Principles and Practice", url: "#", domain: "ancientsci.com" },
-                    { title: "Modern Research on Ayurvedic Detoxification", url: "#", domain: "pubmed.gov" }
-                ];
-            } else {
-                // Generic Ayurveda response
-                summary = `
-                    <h5 class="font-semibold text-gray-800 mb-2">Ayurveda: The Science of Life</h5>
-                    <p class="text-gray-700 mb-3">
-                        Ayurveda is a comprehensive system of medicine that originated in India over 5,000 years ago. 
-                        It focuses on maintaining health through balancing the body, mind, and consciousness according to 
-                        individual constitution and environmental factors.
-                    </p>
-                    <p class="text-gray-700 mb-3">
-                        <strong>Core Principles:</strong> The theory of five elements (panchamahabhutas), three doshas 
-                        (vata, pitta, kapha), and the concept that health is achieved through balance while disease 
-                        results from imbalance.
-                    </p>
-                    <p class="text-gray-700">
-                        <strong>Holistic Approach:</strong> Ayurveda addresses the root cause of illness rather than just 
-                        symptoms, emphasizing prevention, natural healing, and personalized treatment approaches.
-                    </p>
-                `;
-                sources = [
-                    { title: "Fundamentals of Ayurvedic Medicine", url: "#", domain: "ayurveda-research.com" },
-                    { title: "Evidence-Based Ayurveda", url: "#", domain: "pubmed.ncbi.nlm.nih.gov" },
-                    { title: "Traditional Knowledge Systems", url: "#", domain: "who.int" }
-                ];
-            }
-            
-            knowledgeLoading.classList.add('hidden');
-            knowledgeSummary.innerHTML = summary;
-            knowledgeSourcesList.innerHTML = sources.map(source => `
-                <div class="mb-2">
-                    <a href="${source.url}" class="text-teal-600 hover:text-teal-800 font-medium" target="_blank" rel="noopener">
-                        ${source.title}
-                    </a>
-                    <span class="text-gray-500 text-sm ml-2">(${source.domain})</span>
-                </div>
-            `).join('');
-            knowledgeResults.classList.remove('hidden');
-        }
-
-        // ---- Post Form ----
-        postForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            postError.classList.add('hidden');
-            const content = postContent.value.trim();
-            if (!content) {
-                postError.innerText = "Post cannot be empty.";
-                postError.classList.remove('hidden');
-                return;
-            }
-            if (!currentUser) {
-                postError.innerText = "You must be signed in to post.";
-                postError.classList.remove('hidden');
-                return;
-            }
-            try {
-                await addDoc(collection(db, 'posts'), {
-                    userId: currentUser.uid,
-                    userName: userProfile?.name || "Anonymous",
-                    content,
-                    timestamp: new Date(),
-                });
-                postContent.value = '';
-            } catch (err) {
-                postError.innerText = err.message;
-                postError.classList.remove('hidden');
-            }
-        });
-
-        // ---- Helpers ----
-        function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, tag => ({
-                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-            }[tag]));
-        }
-        function formatTime(ts) {
-            if (!ts) return '';
-            let date = ts instanceof Date ? ts : ts.toDate ? ts.toDate() : new Date(ts);
-            return date.toLocaleString();
-        }
-        
-        // ---- Initialization ----
         document.addEventListener('DOMContentLoaded', () => {
             const authPage = document.getElementById('auth-page');
             const dashboardView = document.getElementById('dashboard-view');
@@ -1246,40 +578,13 @@
             let feedUnsub = null;
             let pageState = 'dashboard';
             let isSignUpMode = false;
-        
-            let firebaseConfig = {
-                apiKey: "AIzaSyCfeO_3v0DEhdu1ihGpNy8Kd5P97NH34Ts",
-                authDomain: "ayurveda-connect.firebaseapp.com",
-                projectId: "ayurveda-connect",
-                storageBucket: "ayurveda-connect.firebasestorage.app",
-                messagingSenderId: "521268075102",
-                appId: "1:521268075102:web:ba723ff0288e6db493f2cf",
-                measurementId: "G-9GVR0STXJB"
-            };
-            let appId = "ayurveda-connect";
-    
-            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-                try {
-                    firebaseConfig = JSON.parse(__firebase_config);
-                    appId = typeof __app_id !== 'undefined' ? __app_id : firebaseConfig.projectId;
-                    console.log("Using Canvas-provided Firebase configuration.");
-                } catch (e) {
-                    console.error("Failed to parse Canvas-provided Firebase config:", e);
-                }
-            }
-            
-            const firebaseApp = initializeApp(firebaseConfig);
-            const auth = getAuth(firebaseApp);
-            const db = getFirestore(firebaseApp);
-
-            const isFirebaseReady = () => auth && db && firebaseApp;
 
             function showMessage(text, timeout=3000) {
                 customMessage.innerText = text;
                 customMessage.classList.remove('hidden');
                 setTimeout(() => customMessage.classList.add('hidden'), timeout);
             }
-    
+
             function showSection(section) {
                 pageSections.forEach(sec => {
                     if (sec.id === section + '-page') {
@@ -1290,11 +595,11 @@
                 });
                 pageState = section;
             }
-    
+
             navBtns.forEach(btn => btn.addEventListener('click', () => {
                 showSection(btn.dataset.page);
             }));
-    
+
             function setAuthMode(signUpMode) {
                 isSignUpMode = signUpMode;
                 
@@ -1315,7 +620,7 @@
                     clearAllErrors();
                 }
             }
-    
+
             function clearAllErrors() {
                 authMessage.innerText = '';
                 usernameError.style.display = 'none';
@@ -1325,7 +630,7 @@
                 emailError.innerText = '';
                 passwordError.innerText = '';
             }
-    
+
             function showFieldError(field, message) {
                 if (field === 'username') {
                     usernameError.innerText = message;
@@ -1338,15 +643,15 @@
                     passwordError.style.display = 'block';
                 }
             }
-    
+
             function validateSignUpForm() {
                 const email = authEmail.value.trim();
                 const password = authPassword.value;
                 const username = authName.value.trim();
                 let hasErrors = false;
-    
+
                 clearAllErrors();
-    
+
                 if (!username) {
                     showFieldError('username', 'Username is required');
                     hasErrors = true;
@@ -1354,7 +659,7 @@
                     showFieldError('username', 'Username must be at least 2 characters');
                     hasErrors = true;
                 }
-    
+
                 if (!email) {
                     showFieldError('email', 'Email is required');
                     hasErrors = true;
@@ -1362,7 +667,7 @@
                     showFieldError('email', 'Please enter a valid email address');
                     hasErrors = true;
                 }
-    
+
                 if (!password) {
                     showFieldError('password', 'Password is required');
                     hasErrors = true;
@@ -1370,41 +675,41 @@
                     showFieldError('password', 'Password must be at least 6 characters');
                     hasErrors = true;
                 }
-    
+
                 return !hasErrors;
             }
-    
+
             function validateSignInForm() {
                 const email = authEmail.value.trim();
                 const password = authPassword.value;
                 let hasErrors = false;
-    
+
                 clearAllErrors();
-    
+
                 if (!email) {
                     showFieldError('email', 'Email is required');
                     hasErrors = true;
                 }
-    
+
                 if (!password) {
                     showFieldError('password', 'Password is required');
                     hasErrors = true;
                 }
-    
+
                 return !hasErrors;
             }
-    
+
             authToggle.addEventListener('click', () => {
                 setAuthMode(!isSignUpMode);
                 authForm.reset();
             });
-    
+
             function resetAuthForm() {
                 setAuthMode(false);
                 authForm.reset();
                 clearAllErrors();
             }
-    
+
             authForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
