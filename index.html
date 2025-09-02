@@ -901,6 +901,7 @@
             profileBioInput.value = profile.bio || "";
         }
 
+        let feedUnsub = null;
         function subscribeFeed() {
             if (feedUnsub) feedUnsub();
             feedUnsub = onSnapshot(
@@ -1140,6 +1141,7 @@
             let date = ts instanceof Date ? ts : ts.toDate ? ts.toDate() : new Date(ts);
             return date.toLocaleString();
         }
+    });
     </script>
 </body>
 </html>
