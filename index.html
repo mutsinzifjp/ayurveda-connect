@@ -1063,13 +1063,13 @@
                 let sources = [];
                 if (candidate && candidate.content?.parts?.[0]?.text) {
                     summary = candidate.content.parts[0].text;
-                    const groundingMetadata = candidate.groundingMetadata;
-                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
-                        sources = groundingMetadata.groundingAttributions
+                    const groundingMetadata = candidate.groundingAttributions;
+                    if (groundingMetadata && groundingMetadata.length > 0) {
+                        sources = groundingMetadata
                             .map(attribution => ({
-                                uri: attribution.web?.uri,
-                                title: attribution.web?.title,
-                                domain: new URL(attribution.web?.uri).hostname
+                                uri: attribution.uri,
+                                title: attribution.title,
+                                domain: new URL(attribution.uri).hostname
                             }))
                             .filter(source => source.uri && source.title);
                     }
@@ -1142,3 +1142,6 @@
             return date.toLocaleString();
         }
     });
+    </script>
+</body>
+</html>
